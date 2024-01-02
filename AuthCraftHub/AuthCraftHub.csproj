@@ -15,8 +15,4 @@
     <ProjectReference Include="..\DBUtilityHub\DBUtilityHub.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
