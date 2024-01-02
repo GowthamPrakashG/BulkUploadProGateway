@@ -10,10 +10,10 @@ namespace ClientSchemaHub.Controllers
     [Route("[controller]")]
     public class EntityMigrateController : ControllerBase
     {
-        private readonly GeneralDatabaseService _generalDatabaseService;
+        private readonly IGeneralDatabaseService _generalDatabaseService;
         public EntityMigrateController(IGeneralDatabaseService generalDatabaseService)
         {
-             generalDatabaseService = _generalDatabaseService;
+            _generalDatabaseService = generalDatabaseService;
         }
 
         [HttpGet("GetTableDetails")]
