@@ -250,47 +250,6 @@ namespace ClientSchemaHub.Service
             }
         }
 
-        public async Task<List<Dictionary<string, string>>> InsertData(DBConnectionDTO dBConnection, string tableName,Dictionary<string, string> data)
-        {
-            try
-            {
-                string connectionString = BuildConnectionString(dBConnection);
-
-                List<Dictionary<string, string>> dataToRemove = new List<Dictionary<string, string>>();
-
-                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    using (NpgsqlCommand cmd = new NpgsqlCommand())
-                    {
-                        cmd.Connection = connection;
-                        // Build the INSERT statement
-
-                        string columns2 = string.Join(", ", data.Keys.Select(k => $"\"{k}\"")); // Use double quotes for case-sensitive column names
-
-                        string values = string.Join(", ", data.Values.Select(v => $"'{v}'")); // Wrap values in single quotes for strings
-
-                        string query = $"INSERT INTO \"{tableName}\" ({columns2}) VALUES ({values})"; // Use double quotes for case-sensitive table name
-
-                        cmd.CommandText = query;
-
-                        cmd.ExecuteNonQuery();
-
-                        dataToRemove.Add(data);
-
-                    }
-                    connection.Close();
-                 }
-
-                return dataToRemove;
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
-        }
-
         // Build Connection string
         private string BuildConnectionString(DBConnectionDTO connectionDTO)
         {
