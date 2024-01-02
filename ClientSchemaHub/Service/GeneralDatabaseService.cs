@@ -5,13 +5,13 @@ namespace ClientSchemaHub.Service
 {
     public class GeneralDatabaseService : IGeneralDatabaseService
     {
-        private readonly PostgreSQLService _postgreSQLService;
-        private readonly MySQLService _mySQLService;
+        private readonly IPostgreSQLService _postgreSQLService;
+        private readonly IMySQLService _mySQLService;
 
         public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService)
         {
-            postgreSQLService = _postgreSQLService;
-            mySQLService = _mySQLService;
+            _postgreSQLService = postgreSQLService;
+            _mySQLService = mySQLService;
             // Initialize other database services
         }
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
