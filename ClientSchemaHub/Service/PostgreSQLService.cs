@@ -11,7 +11,7 @@ namespace ClientSchemaHub.Service
         // Register the Npgsql provider
         public PostgreSQLService()
         {
-            DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
+            DbProviderFactories.RegisterFactory("postgresql", NpgsqlFactory.Instance);
         }
 
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO dBConnection)

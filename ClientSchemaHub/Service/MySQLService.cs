@@ -13,7 +13,7 @@ namespace ClientSchemaHub.Service
         public MySQLService()
         {
             // Register the MySQL provider
-            DbProviderFactories.RegisterFactory("MySql.Data.MySqlClient", MySqlClientFactory.Instance);
+            DbProviderFactories.RegisterFactory("mysql", MySqlClientFactory.Instance);
         }
 
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO dBConnection)
