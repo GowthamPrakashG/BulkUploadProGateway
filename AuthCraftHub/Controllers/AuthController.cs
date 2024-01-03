@@ -33,8 +33,8 @@ namespace AuthCraftHub.Controllers
                     return BadRequest(_response);
                 }
 
-                var userDetailsDTO = await _authService.AuthenticateAsync(model.Email, model.Password);
-                if (userDetailsDTO.RoleName != null || userDetailsDTO.Token != null)
+                var userDetailsDTO = await _authService.AuthenticateAsync(model);
+                if (userDetailsDTO.UserName != null || userDetailsDTO.Token != null)
                 {
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

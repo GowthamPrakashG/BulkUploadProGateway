@@ -13,69 +13,29 @@ namespace AuthCraftHub.Services
     public class AuthService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
 
-        public AuthService(ApplicationDbContext context, IConfiguration configuration)
+        public AuthService(ApplicationDbContext context)
         {
             _context = context;
-            _configuration = configuration;
         }
 
-        public async Task<UserTokenDTO> AuthenticateAsync(string Email, string password)
+        // Auth JWT
+        internal async Task<UserTokenDTO> AuthenticateAsync(LoginDTO user)
         {
+            var userModel = await _context.UserEntity.FirstOrDefaultAsync(u => u.Email == user.Email);
 
-            var user = await _context.UserEntity.FirstOrDefaultAsync(u => u.Email == Email);
-            if (user == null)
+            if (userModel == null || !VerifyPassword(userModel.Password, user.Password))
             {
                 return null;
             }
 
-            UserDTO userDTO = (UserDTO)user;
-
-            if (user != null)
+            var userDetailsDTO = new UserTokenDTO
             {
-                if (VerifyPassword(user.Password, password))
-                {
-                    var role = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == user.RoleId);
-                    var userDetailsDTO = new UserTokenDTO
-                    {
-                        //Id = user.Id,
-                        //Email = user.Email,
-                        //RoleId = user.RoleId,
-                        RoleName = role?.RoleName,
-                        Token = GenerateJwtToken(userDTO)
-                    };
-                    return userDetailsDTO;
-                }
-            }
-            return null;
-        }
-        public string GenerateJwtToken(UserDTO user)
-        {
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(key);
-            }
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-
-                Subject = new ClaimsIdentity(new[]
-                {
-            new Claim(ClaimTypes.Name, user.Id.ToString()),
-            new Claim("userName", user.Name.ToString()), // Add userId claim
-            new Claim(ClaimTypes.Email, user.Email), // Add email claim
-            new Claim("roleName", Getrole(user.RoleId).ToString()) // Add role claim
-             }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                UserName = userModel.Name,
+                Token = GenerateJwtToken((UserDTO)userModel)
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return userDetailsDTO;
         }
 
         private bool VerifyPassword(string storedHashedPassword, string enteredPassword)
@@ -85,7 +45,58 @@ namespace AuthCraftHub.Services
             return passwordVerificationResult == PasswordVerificationResult.Success;
         }
 
-        public async Task<UserDTO> CreateUserAsync(UserDTO userModel)
+        private string HashPassword(string password)
+        {
+            var passwordHasher = new PasswordHasher<UserDTO>();
+            return passwordHasher.HashPassword(null, password);
+        }
+        private string GenerateJwtToken(UserDTO user)
+        {
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = GenerateRandomKey();
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                     new Claim(ClaimTypes.Name, user.Id.ToString()),
+                     new Claim(ClaimTypes.NameIdentifier, user.Name.ToString()), // Use ClaimTypes.NameIdentifier for userId
+                     new Claim(ClaimTypes.Email, user.Email),
+                     new Claim(ClaimTypes.Role, GetRoleName(user.RoleId).ToString())
+                }),
+
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private byte[] GenerateRandomKey()
+        {
+            var key = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(key);
+            }
+            return key;
+        }
+
+        private string GetRoleName(int roleId)
+        {
+            string? roleName = _context.RoleEntity.Where(r => r.Id == roleId).Select(r => r.RoleName).FirstOrDefault();
+            if (string.IsNullOrEmpty(roleName))
+            {
+                return string.Empty;
+            }
+            return roleName;
+        }
+
+        
+        // User CRUD
+        internal async Task<UserDTO> CreateUserAsync(UserDTO userModel)
         {
             var role = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == userModel.RoleId);
             bool isEmailExist = await _context.UserEntity.AnyAsync(u => u.Email == userModel.Email);
@@ -113,32 +124,7 @@ namespace AuthCraftHub.Services
             return null;
         }
 
-        private string HashPassword(string password)
-        {
-            var passwordHasher = new PasswordHasher<UserDTO>();
-            return passwordHasher.HashPassword(null, password);
-        }
-
-        public string Getrole(int Id)
-        {
-            if (Id == 0)
-            {
-                return null;
-            }
-
-            else
-            {
-                var role = _context.RoleEntity.FirstOrDefault(x => x.Id == Id);
-
-                if (role != null)
-                {
-                    return role.RoleName;
-                }
-                return null;
-            }
-        }
-
-        public async Task<IEnumerable<UserDTO>> GetUsersAsync()
+        internal async Task<IEnumerable<UserDTO>> GetUsersAsync()
         {
             var users = _context.UserEntity.ToList();
 
@@ -149,7 +135,7 @@ namespace AuthCraftHub.Services
             return userDTO;
         }
 
-        public async Task<UserDTO?> GetUserAsync(int id)
+        internal async Task<UserDTO?> GetUserAsync(int id)
         {
 
             var user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Id == id);
@@ -164,7 +150,7 @@ namespace AuthCraftHub.Services
             return userDTO;
         }
 
-        public async Task<UserDTO?> GetUserAsync(string email)
+        internal async Task<UserDTO?> GetUserAsync(string email)
         {
             var user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Email.Trim().ToLower() == email.Trim().ToLower());
 
@@ -179,7 +165,7 @@ namespace AuthCraftHub.Services
             return userDTO;
         }
 
-        public async Task<UserDTO> UpdateUserAsync(UserDTO userTableModelDTO)
+        internal async Task<UserDTO> UpdateUserAsync(UserDTO userTableModelDTO)
         {
             UserEntity user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Id == userTableModelDTO.Id);
             var role = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == userTableModelDTO.RoleId);
@@ -198,7 +184,7 @@ namespace AuthCraftHub.Services
         }
 
 
-        public List<RoleDTO> GetRoleIdsAndNames()
+        internal List<RoleDTO> GetRoleIdsAndNames()
         {
             try
             {
