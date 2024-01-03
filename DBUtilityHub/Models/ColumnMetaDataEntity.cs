@@ -22,8 +22,8 @@ namespace DBUtilityHub.Models
         // Other properties...
 
         // Foreign keys for relationship with EntityListMetadata
-        public int ReferenceEntityID { get; set; }
-        public int ReferenceColumnID { get; set; }
+        public int? ReferenceEntityID { get; set; }
+        public int? ReferenceColumnID { get; set; }
 
         // Navigation properties for relationships with EntityListMetadata
         [ForeignKey("ReferenceTableMetaDataId")]
@@ -31,13 +31,13 @@ namespace DBUtilityHub.Models
 
         [ForeignKey("ReferenceColumnMetaDataId")]
         public ColumnMetaDataEntity ReferenceColumn { get; set; }
-        public int Length { get; set; }
+        public int? Length { get; set; }
         public int? MinLength { set; get; }
         public int? MaxLength { set; get; }
         public int? MaxRange { set; get; }
         public int? MinRange { set; get; }
         public string DateMinValue { set; get; }
-        public string DateMaxValue { set; get; }
+        public string DateMaxValue { set; get; }    
         public string Description { get; set; }
         public bool IsNullable { get; set; }
         public string DefaultValue { get; set; }
