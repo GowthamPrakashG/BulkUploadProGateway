@@ -207,6 +207,23 @@ namespace DBUtilityHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RoleEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            RoleName = "Developer"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            RoleName = "Tester"
+                        });
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.TableMetaDataEntity", b =>
@@ -302,6 +319,24 @@ namespace DBUtilityHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = 0,
+                            CreatedDate = new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7126),
+                            DOB = new DateOnly(1, 1, 1),
+                            Email = "superuser@datayaan.com",
+                            Gender = "",
+                            Name = "SuperUser",
+                            Password = "Datayaan@123",
+                            Phonenumber = "9876543210",
+                            RoleId = 1,
+                            Status = true,
+                            UpdatedBy = 0,
+                            UpdatedDate = new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7128)
+                        });
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.ColumnMetaDataEntity", b =>

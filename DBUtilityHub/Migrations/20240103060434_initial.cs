@@ -4,10 +4,12 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace DBUtilityHub.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigration : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -165,6 +167,21 @@ namespace DBUtilityHub.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "RoleEntity",
+                columns: new[] { "Id", "RoleName" },
+                values: new object[,]
+                {
+                    { 1, "Admin" },
+                    { 2, "Developer" },
+                    { 3, "Tester" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "UserEntity",
+                columns: new[] { "Id", "CreatedBy", "CreatedDate", "DOB", "Email", "Gender", "Name", "Password", "Phonenumber", "RoleId", "Status", "UpdatedBy", "UpdatedDate" },
+                values: new object[] { 1, 0, new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7126), new DateOnly(1, 1, 1), "superuser@datayaan.com", "", "SuperUser", "Datayaan@123", "9876543210", 1, true, 0, new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7128) });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ColumnMetaDataEntity_ReferenceColumnMetaDataId",

@@ -23,7 +23,39 @@ namespace DBUtilityHub.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<RoleEntity>().HasData(
+                new RoleEntity
+                {
+                    Id = 1,
+                    RoleName = "Admin"
+                 
+                },
+                new RoleEntity
+                {
+                    Id = 2,
+                    RoleName = "Developer"
+
+                },
+                new RoleEntity
+                {
+                    Id = 3,
+                    RoleName = "Tester"
+
+                });
+            modelBuilder.Entity<UserEntity>().HasData(
+                new UserEntity
+                {
+                    Id = 1,
+                    Name = "SuperUser",
+                    RoleId = 1,
+                    Email = "superuser@datayaan.com",
+                    Password = "Datayaan@123",
+                    Phonenumber = "9876543210",
+                    Gender = "",
+                    Status = true
+
+                });
         }
 
     }
