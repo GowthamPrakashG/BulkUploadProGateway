@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DBUtilityHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240103060434_initial")]
+    [Migration("20240103073556_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -328,17 +328,17 @@ namespace DBUtilityHub.Migrations
                         {
                             Id = 1,
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7126),
+                            CreatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6205),
                             DOB = new DateOnly(1, 1, 1),
                             Email = "superuser@datayaan.com",
                             Gender = "",
                             Name = "SuperUser",
-                            Password = "Datayaan@123",
+                            Password = "AQAAAAIAAYagAAAAEFUwAGdRht/x8RmJmb5mMyb9u/acQMHafPJk3Vd1DvumKRIMpk0WGGulJr4uInTBLA==",
                             Phonenumber = "9876543210",
                             RoleId = 1,
                             Status = true,
                             UpdatedBy = 0,
-                            UpdatedDate = new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7128)
+                            UpdatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6211)
                         });
                 });
 

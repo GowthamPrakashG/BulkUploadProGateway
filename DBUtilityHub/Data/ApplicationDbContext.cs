@@ -1,5 +1,6 @@
 ﻿
 using DBUtilityHub.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -50,7 +51,7 @@ namespace DBUtilityHub.Data
                     Name = "SuperUser",
                     RoleId = 1,
                     Email = "superuser@datayaan.com",
-                    Password = "Datayaan@123",
+                    Password = new PasswordHasher<UserEntity>().HashPassword(null, "Datayaan@123"),
                     Phonenumber = "9876543210",
                     Gender = "",
                     Status = true

@@ -181,7 +181,7 @@ namespace DBUtilityHub.Migrations
             migrationBuilder.InsertData(
                 table: "UserEntity",
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "DOB", "Email", "Gender", "Name", "Password", "Phonenumber", "RoleId", "Status", "UpdatedBy", "UpdatedDate" },
-                values: new object[] { 1, 0, new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7126), new DateOnly(1, 1, 1), "superuser@datayaan.com", "", "SuperUser", "Datayaan@123", "9876543210", 1, true, 0, new DateTime(2024, 1, 3, 6, 4, 34, 499, DateTimeKind.Utc).AddTicks(7128) });
+                values: new object[] { 1, 0, new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6205), new DateOnly(1, 1, 1), "superuser@datayaan.com", "", "SuperUser", "AQAAAAIAAYagAAAAEFUwAGdRht/x8RmJmb5mMyb9u/acQMHafPJk3Vd1DvumKRIMpk0WGGulJr4uInTBLA==", "9876543210", 1, true, 0, new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6211) });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ColumnMetaDataEntity_ReferenceColumnMetaDataId",
