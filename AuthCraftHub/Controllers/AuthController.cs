@@ -11,11 +11,13 @@ namespace AuthCraftHub.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        protected APIResponse _response;
         private readonly AuthService _authService;
 
         public AuthController(AuthService authService)
         {
             _authService = authService;
+            _response = new();
         }
 
         [HttpPost("login")]
@@ -25,34 +27,34 @@ namespace AuthCraftHub.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = ModelState.Values.SelectMany(c => c.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(_response);
                 }
+
                 var userDetailsDTO = await _authService.AuthenticateAsync(model.Email, model.Password);
-                if (userDetailsDTO != null)
+                if (userDetailsDTO.RoleName != null || userDetailsDTO.Token != null)
                 {
-                    var responseModel = new APIResponse
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        IsSuccess = true,
-                        Result = userDetailsDTO.Token
-                    };
-                    return Ok(responseModel);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    _response.Result = userDetailsDTO;
+                    return Ok(_response);
                 }
                 else
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        ErrorMessage = "Invalid credentials"
-                    };
-                    return BadRequest(errorResponse);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "Username or password is incorrect" };
+                    return BadRequest(_response);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
@@ -61,44 +63,37 @@ namespace AuthCraftHub.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
+                if (!ModelState.IsValid || userModel == null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.SeeOther,
-                        IsSuccess = false,
-                        ErrorMessage = "Invalid credentials"
-                    };
-                    return BadRequest(ModelState);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = ModelState.Values.SelectMany(c => c.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(_response);
                 }
 
                 var createdUser = await _authService.CreateUserAsync(userModel);
 
                 if (createdUser != null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        IsSuccess = true,
-                        Result = createdUser
-                    };
-                    return Ok(errorResponse);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    _response.Result = createdUser;
+                    return Ok(_response);
                 }
                 else
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        ErrorMessage = "Failed to create user. Check role details and EmailId"
-                    };
-                    return BadRequest(errorResponse);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "Failed to create user. Check role details and EmailId" };
+                    return BadRequest(_response);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
@@ -111,28 +106,23 @@ namespace AuthCraftHub.Controllers
 
                 if (getUserList == null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.NoContent,
-                        IsSuccess = false,
-                        ErrorMessage = "There are no users in the database. Please ensure that user records exist and try again."
-                    };
-
-                    return Ok(errorResponse);
+                    _response.StatusCode = HttpStatusCode.NoContent;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "There are no users in the database. Please ensure that user records exist and try again." };
+                    return StatusCode(204, _response);
                 }
 
-                var Response = new
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    IsSuccess = true,
-                    Result = getUserList
-                };
-                return Ok(Response);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getUserList;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
@@ -141,32 +131,35 @@ namespace AuthCraftHub.Controllers
         {
             try
             {
+                if(id == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadGateway;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The 'id' parameter cannot be 0 or null." };
+                    return BadRequest(_response);
+                }
+
                 var getUser = await _authService.GetUserAsync(id);
 
                 if (getUser == null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.NoContent,
-                        IsSuccess = false,
-                        ErrorMessage = "The user with the specified ID does not exist in the database. Please check the provided user ID and try again."
-                    };
-
-                    return Ok(errorResponse);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The user with the specified ID does not exist in the database. Please check the provided user ID and try again." };
+                    return NotFound(_response);
                 }
 
-                var Response = new
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    IsSuccess = true,
-                    Result = getUser
-                };
-                return Ok(Response);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getUser;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
@@ -175,78 +168,73 @@ namespace AuthCraftHub.Controllers
         {
             try
             {
+                if (string.IsNullOrEmpty(email))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The 'email' parameter cannot be empty or null." };
+                    return BadRequest(_response);
+                }
                 var getUser = await _authService.GetUserAsync(email);
 
                 if (getUser == null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.NoContent,
-                        IsSuccess = false,
-                        ErrorMessage = "The user with the specified ID does not exist in the database. Please check the provided user ID and try again."
-                    };
-
-                    return Ok(errorResponse);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The user with the specified email does not exist in the database. Please check the provided user email and try again." };
+                    return NotFound(_response);
                 }
 
-                var Response = new
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    IsSuccess = true,
-                    Result = getUser
-                };
-                return Ok(Response);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getUser;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
         [HttpPut("UpdateUserbyId")]
-        public async Task<IActionResult> UpdateUser([FromBody] UserDTO userTableModelDTO)
+        public async Task<IActionResult> UpdateUser([FromBody] UserDTO userModel)
         {
             try
             {
-                if (!ModelState.IsValid)
+                if (!ModelState.IsValid || userModel == null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.SeeOther,
-                        IsSuccess = false,
-                        ErrorMessage = "Invalid User Details"
-                    };
-                    return BadRequest(ModelState);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = ModelState.Values.SelectMany(c => c.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(_response);
                 }
 
-                var UpdatedUser = await _authService.UpdateUserAsync(userTableModelDTO);
+                var UpdatedUser = await _authService.UpdateUserAsync(userModel);
 
                 if (UpdatedUser != null)
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        IsSuccess = true,
-                        Result = UpdatedUser
-                    };
-                    return Ok(errorResponse);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    _response.Result = UpdatedUser;
+                    return Ok(_response);
                 }
                 else
                 {
-                    var errorResponse = new
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        ErrorMessage = "Failed to update user. Check role details and EmailId"
-                    };
-                    return BadRequest(errorResponse);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "Failed to update user. Check role details and EmailId" };
+                    return BadRequest(_response);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
 
@@ -259,29 +247,25 @@ namespace AuthCraftHub.Controllers
 
                 if (roleData != null && roleData.Any())
                 {
-                    var response = new
-                    {
-                        StatusCode = 200, // OK
-                        IsSuccess = true,
-                        Result = roleData
-                    };
-                    return Ok(response);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    _response.Result = roleData;
+                    return Ok(_response);
                 }
                 else
                 {
-                    var response = new
-                    {
-                        StatusCode = 204, // No Content
-                        IsSuccess = false,
-                        ErrorMessage = "No roles found."
-                    };
-                    return Ok(response);
+                    _response.StatusCode = HttpStatusCode.NoContent;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "There are no roles in the database. Please ensure that roles records exist and try again." };
+                    return StatusCode(204, _response);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
             }
         }
     }
