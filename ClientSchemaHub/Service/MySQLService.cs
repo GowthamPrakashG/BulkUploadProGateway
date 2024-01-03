@@ -248,7 +248,48 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
-        private string BuildConnectionString(DBConnectionDTO connectionDTO)
+
+        //create table
+        public async Task<bool> ConvertAndCallCreateTableModel(DBConnectionDTO connectionDTO, string createQuery)
+        {
+            try
+            {
+                // Create a MySQL connection string
+                string connectionString = $"Server={connectionDTO.HostName};Database={connectionDTO.DataBase};User Id={connectionDTO.UserName};Password={connectionDTO.Password}";
+
+                // Create a new MySQL connection
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    // Create a command to execute SQL statements
+                    using (MySqlCommand command = new MySqlCommand())
+                    {
+                        command.Connection = connection;
+
+                        // Generate the SQL statement to create the table
+                        string createTableSql = createQuery;
+
+                        // Set the SQL statement
+                        command.CommandText = createTableSql;
+
+                        // Execute the SQL statement
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    await connection.CloseAsync();
+                    return true;
+                }
+
+                // Now you can use the mapTable object as needed.
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        private  string BuildConnectionString(DBConnectionDTO connectionDTO)
         {
             // Build and return the connection string based on the DTO properties
             // This is just a simple example; in a real-world scenario, you would want to handle this more securely

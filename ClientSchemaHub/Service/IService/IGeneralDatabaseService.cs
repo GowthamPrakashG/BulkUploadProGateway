@@ -10,5 +10,6 @@ namespace ClientSchemaHub.Service.IService
         public Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO dBConnection, string tableName);
 
         public Task<List<dynamic>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName);
+        public Task<bool> CreateTable(DBConnectionDTO dBConnection, string query);
     }
 }

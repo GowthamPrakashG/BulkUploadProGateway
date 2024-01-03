@@ -250,8 +250,49 @@ namespace ClientSchemaHub.Service
             }
         }
 
-        // Build Connection string
-        private string BuildConnectionString(DBConnectionDTO connectionDTO)
+
+        //create Table
+        public async Task<bool> ConvertAndCallCreateTableModel(DBConnectionDTO connectionDTO, string createquery)
+        {
+            try
+            {
+
+                // Create a PostgreSQL connection string
+                string connectionString = $"Host={connectionDTO.HostName};Database={connectionDTO.DataBase};Username={connectionDTO.UserName};Password={connectionDTO.Password}";
+
+                // Create a new PostgreSQL connection
+                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    // Create a command to execute SQL statements
+                    using (NpgsqlCommand command = new NpgsqlCommand())
+                    {
+                        command.Connection = connection;
+
+                        // Generate the SQL statement to create the table
+                        string createTableSql = createquery;
+
+                        // Set the SQL statement
+                        command.CommandText = createTableSql;
+
+                        // Execute the SQL statement
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    await connection.CloseAsync();
+                    return true;
+                }
+
+                // Now you can use the mapTable object as needed.
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                throw new ArgumentException(ex.Message);
+            }
+        }
+            // Build Connection string
+            private string BuildConnectionString(DBConnectionDTO connectionDTO)
         {
             // Build and return the connection string based on the DTO properties
             // This is just a simple example; in a real-world scenario, you would want to handle this more securely

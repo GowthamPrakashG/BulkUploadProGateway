@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using ClientSchemaHub.Models.DTO;
+using ClientSchemaHub.Service;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
 
@@ -262,10 +264,12 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpPost("createtables")]
-        public async Task<IActionResult> InsertTable([FromBody] TableRequest tableRequest)
+        public async Task<IActionResult> InsertTable([FromQuery]DBConnectionDTO connectionDTO, [FromBody] TableRequest tableRequest)
         {
             try
             {
+                var craetetable = await _entitySchemaService.convertandcallcreatetablemodel(connectionDTO, tableRequest);
+
                 // Insert table
                 var tableId = await _entitySchemaService.CreateTableAsync(tableRequest.Table);
 
@@ -302,34 +306,72 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        //[HttpPost("cliententity")]
-        //public async Task<IActionResult> cliententity([FromBody] DBConnectionDTO connectionDTO)
-        //{
-        //    try
-        //    {
-        //        // Insert table
-        //        var tabledetails = await _entitySchemaService.GetClientSchema(connectionDTO);
+        [HttpPost("cliententity")]
+        public async Task<IActionResult> ClientEntity([FromQuery] DBConnectionDTO connectionDTO)
+        {
+            try
+            {
+                // Assuming you have a valid base URL for the other project
+                string otherApiBaseUrl = "https://localhost:7246/";
 
-        //        var responseModel = new APIResponse
-        //        {
-        //            StatusCode = HttpStatusCode.Created,
-        //            IsSuccess = true,
-        //            Result = tabledetails
-        //        };
-        //        return Ok(responseModel);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var responseModel = new APIResponse
-        //        {
-        //            StatusCode = HttpStatusCode.InternalServerError,
-        //            IsSuccess = false,
-        //            ErrorMessages = new List<string> { ex.Message },
-        //            Result = null
-        //        };
-        //        return StatusCode((int)responseModel.StatusCode, responseModel);
-        //    }
-        //}
+                // Create HttpClient instance
+                using (var httpClient = new HttpClient())
+                {
+                    // Set the base address of the other API
+                    httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
+                    string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+
+                    // Call the other API to get table details
+                    var response = await httpClient.GetAsync($"EntityMigrate/GetTableDetails?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={encodedPassword}");
+
+                    // Check if the request was successful
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Read the response content
+                        var responseContent = await response.Content.ReadAsStringAsync();
+
+                        // Parse the response content as needed (assuming it's JSON)
+                        var tableDetails = JsonConvert.DeserializeObject<APIResponse>(responseContent);
+
+                        var responcedetials = await _entitySchemaService.GetClientSchema(tableDetails,connectionDTO);
+
+                        // Continue with your logic...
+
+                        var responseModel = new APIResponse
+                        {
+                            StatusCode = HttpStatusCode.Created,
+                            IsSuccess = true,
+                            Result = tableDetails
+                        };
+
+                        return Ok(responseModel);
+                    }
+                    else
+                    {
+                        // Handle unsuccessful response
+                        var responseModel = new APIResponse
+                        {
+                            StatusCode = response.StatusCode,
+                            IsSuccess = false,
+                            Result = null // You might want to include more details here
+                        };
+
+                        return StatusCode((int)responseModel.StatusCode, responseModel);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
     }
 }

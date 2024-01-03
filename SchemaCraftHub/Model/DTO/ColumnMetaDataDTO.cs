@@ -10,9 +10,6 @@
         public int EntityId { get; set; }
         public int? ReferenceEntityID { get; set; }
         public int? ReferenceColumnID { get; set; }
-        public TableMetaDataDTO? Entity { get; set; }
-        public TableMetaDataDTO? ReferenceEntity { get; set; }
-        public ColumnMetaDataDTO? ReferenceColumn { get; set; }
         public int? Length { get; set; }
         public int? MinLength { set; get; }
         public int? MaxLength { set; get; }

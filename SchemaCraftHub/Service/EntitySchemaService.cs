@@ -1,8 +1,12 @@
-﻿using DBUtilityHub.Data;
+﻿using ClientSchemaHub.Models.DTO;
+using DBUtilityHub.Data;
 using DBUtilityHub.Models;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
+using System.Net;
+using System.Text;
 
 namespace SchemaCraftHub.Service
 {
@@ -291,73 +295,96 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        //public async Task<Dictionary<string, List<TableDetailsDTO>>> GetClientSchema(DBConnectionDTO connectionDTO)
-        //{
-        //    try
-        //    {
-        //        var tabledetails = await _generalDatabaseService.GetTableDetailsForAllTablesAsync(connectionDTO);
+        public async Task<Dictionary<string, List<TableDetailsDTO>>> GetClientSchema(ClientSchemaHub.Models.DTO.APIResponse tabledetails1, DBConnectionDTO connectionDTO)
+        {
+            try
+            {
+                if (tabledetails1.Result != null)
+                {
+                    try
+                    {
+                        var jsonString = JsonConvert.SerializeObject(tabledetails1.Result);
+                        var tableDetailsDict = JsonConvert.DeserializeObject<Dictionary<string, List<TableDetailsDTO>>>(jsonString);
 
-        //        foreach (var tabledetailsDTO in tabledetails)
-        //        {
-        //            foreach(var table in tabledetailsDTO.Value)
-        //            {
-        //                var tablename = new TableMetaDataDTO
-        //                {
-        //                    EntityName = table.TableName,
-        //                    HostName = connectionDTO.HostName,
-        //                    DatabaseName = connectionDTO.DataBase,
-        //                    Provider = connectionDTO.Provider
-        //                };
+                        foreach (var tabledetailsDTO in tableDetailsDict)
+                        {
+                            foreach (var table in tabledetailsDTO.Value)
+                            {
+                                var tablename = new TableMetaDataDTO
+                                {
+                                    EntityName = table.TableName,
+                                    HostName = connectionDTO.HostName,
+                                    DatabaseName = connectionDTO.DataBase,
+                                    Provider = connectionDTO.Provider
+                                };
 
-        //               await CreateTableAsync(tablename);
-        //            }
-        //        }
+                                await CreateTableAsync(tablename);
+                            }
+                        }
 
-        //        foreach (var tabledetailsDTO in tabledetails)
-        //        {
-        //            foreach (var table in tabledetailsDTO.Value)
-        //            {
-        //                var tasks = table.Columns.Select(async columnDTO => new ColumnMetaDataDTO
-        //                {
-        //                    ColumnName = columnDTO.ColumnName,
-        //                    Datatype = columnDTO.DataType,
-        //                    IsPrimaryKey = columnDTO.IsPrimaryKey,
-        //                    IsForeignKey = columnDTO.HasForeignKey,
-        //                    EntityId = GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName).Result.Id,
-        //                    ReferenceEntityID = GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable).Result.Id,
-        //                    // Map other properties as needed
-        //                }).ToList();
+                        foreach (var tabledetailsDTO in tableDetailsDict)
+                        {
+                            foreach (var table in tabledetailsDTO.Value)
+                            {
+                                var tasks = table.Columns.Select(async columnDTO => new ColumnMetaDataDTO
+                                {
+                                    ColumnName = columnDTO.ColumnName,
+                                    Datatype = columnDTO.DataType,
+                                    IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                    IsForeignKey = columnDTO.HasForeignKey,
+                                    EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id,
+                                    ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id,
+                                    // Map other properties as needed
+                                }).ToList();
 
-        //                var columnEntities = await Task.WhenAll(tasks);
+                                var columnEntities = await Task.WhenAll(tasks);
 
-        //                await InsertColumnsAsync(columnEntities.ToList());
-        //            }
-        //        }
+                                await InsertColumnsAsync(columnEntities.ToList());
+                            }
+                        }
 
-        //        return tabledetails;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new ApplicationException(ex.Message, ex);
-        //    }
-        //}
+                        return tableDetailsDict;
+                    }
+                    catch (JsonException)
+                    {
+                        // Handle the case where JSON deserialization fails
+                        throw new ApplicationException("Failed to deserialize Result into the expected format");
+                    }
+                }
+                else
+                {
+                    // Handle the case where Result is null
+                    throw new ApplicationException("Result is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(ex.Message, ex);
+            }
+        }
+
 
         public async Task<int> CreateTableAsync(TableMetaDataDTO tableDTO)
         {
             try
             {
-                var table = new TableMetaDataEntity
+               var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.DatabaseName, tableDTO.EntityName);
+               if(tableexists == null)
                 {
-                    EntityName = tableDTO.EntityName,
-                    HostName = tableDTO.HostName,
-                    DatabaseName = tableDTO.DatabaseName,
-                    Provider = tableDTO.Provider
-                    // Map other properties as needed
-                };
+                    var table = new TableMetaDataEntity
+                    {
+                        EntityName = tableDTO.EntityName,
+                        HostName = tableDTO.HostName,
+                        DatabaseName = tableDTO.DatabaseName,
+                        Provider = tableDTO.Provider
+                        // Map other properties as needed
+                    };
 
-                _context.TableMetaDataEntity.Add(table);
-                await _context.SaveChangesAsync();
-                return table.Id;
+                    _context.TableMetaDataEntity.Add(table);
+                    await _context.SaveChangesAsync();
+                    return table.Id;
+                }
+                return tableexists.Id;
             }
             catch (Exception ex)
             {
@@ -403,5 +430,105 @@ namespace SchemaCraftHub.Service
             }
         }
 
+        public async Task<ClientSchemaHub.Models.DTO.APIResponse> convertandcallcreatetablemodel(DBConnectionDTO connectionDTO, TableRequest tableRequest)
+        {
+            TableDetailsDTO maptable = new TableDetailsDTO
+            {
+                TableName = tableRequest.Table.EntityName,
+                Columns = MapColumns(tableRequest.Columns)
+            };
+
+            var createquery = GenerateCreateTableSql(maptable);
+
+            string otherApiBaseUrl = "https://localhost:7246/EntityMigrate";
+
+            // Create HttpClient instance
+            using (var httpClient = new HttpClient())
+            {
+                // Set the base address of the other API
+                httpClient.BaseAddress = new Uri(otherApiBaseUrl);
+
+                // Call the other API to get table details
+                var response = await httpClient.GetAsync($"CreateTable?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={connectionDTO.Password}");
+
+                // Check if the request was successful
+                if (response.IsSuccessStatusCode)
+                {
+                    // Read the response content
+                    var responseContent = await response.Content.ReadAsStringAsync();
+
+                    // Parse the response content as needed (assuming it's JSON)
+                    var tableDetails = JsonConvert.DeserializeObject<ClientSchemaHub.Models.DTO.APIResponse>(responseContent);
+
+                    // Continue with your logic...
+
+                    return tableDetails;
+                }
+                else
+                {
+                    // Handle unsuccessful response
+                    var responseModel = new ClientSchemaHub.Models.DTO.APIResponse
+                    {
+                        StatusCode = response.StatusCode,
+                        IsSuccess = false,
+                        Result = null // You might want to include more details here
+                    };
+
+                    return responseModel;
+                }
+            }
+
+        }
+
+        private List<ColumnDetailsDTO> MapColumns(List<ColumnMetaDataDTO> columns)
+        {
+            // Map only the required properties from ColumnMetaDataDTO to ColumnDetailsDTO
+            return columns.Select(column => new ColumnDetailsDTO
+            {
+                ColumnName = column.ColumnName,
+                DataType = column.Datatype,
+                IsPrimaryKey = column.IsPrimaryKey,
+                HasForeignKey = column.IsForeignKey,
+                ReferencedTable = GetTableByIdAsync(column.ReferenceEntityID ?? 0).Result.EntityName,
+                ReferencedColumn = GetColumnByIdAsync(column.ReferenceColumnID ?? 0).Result.ColumnName
+                // Add other properties as needed
+            }).ToList();
+        }
+
+        private string GenerateCreateTableSql(TableDetailsDTO mapTable)
+        {
+            StringBuilder sqlBuilder = new StringBuilder();
+
+            // Basic SQL statement to create a table
+            sqlBuilder.Append($"CREATE TABLE {mapTable.TableName} (");
+
+            // Generate columns
+            foreach (var column in mapTable.Columns)
+            {
+                sqlBuilder.Append($"{column.ColumnName} {column.DataType}");
+
+                if (column.IsPrimaryKey)
+                {
+                    sqlBuilder.Append(" PRIMARY KEY");
+                }
+
+                if (column.HasForeignKey)
+                {
+                    // Assuming that ReferencedTable and ReferencedColumn are foreign key references
+                    sqlBuilder.Append($" REFERENCES {column.ReferencedTable}({column.ReferencedColumn})");
+                }
+
+                // Add other column properties as needed
+                sqlBuilder.Append(",");
+            }
+
+            // Remove the trailing comma
+            sqlBuilder.Length--;
+
+            // Close the CREATE TABLE statement
+            sqlBuilder.Append(");");
+
+            return sqlBuilder.ToString();
+        }
     }
 }
