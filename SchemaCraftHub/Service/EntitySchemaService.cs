@@ -491,22 +491,7 @@ namespace SchemaCraftHub.Service
 
         }
 
-        //private List<ColumnDetailsDTO> MapColumns(List<ColumnMetaDataDTO> columns)
-        //{
-        //    // Map only the required properties from ColumnMetaDataDTO to ColumnDetailsDTO
-        //    return columns.Select(column => new ColumnDetailsDTO
-        //    {
-        //        ColumnName = column.ColumnName,
-        //        DataType = column.Datatype,
-        //        IsPrimaryKey = column.IsPrimaryKey,
-        //        HasForeignKey = column.IsForeignKey,
-        //        ReferencedTable = GetTableByIdAsync(column.ReferenceEntityID ?? 0).Result.EntityName,
-        //        ReferencedColumn = GetColumnByIdAsync(column.ReferenceColumnID ?? 0).Result.ColumnName
-        //        // Add other properties as needed
-        //    }).ToList();
-        //}
-
-        private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnMetaDataDTO> columns)
+         private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnMetaDataDTO> columns)
         {
             var columnDetailsList = new List<ColumnDetailsDTO>();
 
@@ -531,10 +516,6 @@ namespace SchemaCraftHub.Service
 
             return columnDetailsList;
         }
-
-
-
-
 
         private string GenerateCreateTableSql(TableDetailsDTO mapTable)
         {
@@ -571,5 +552,56 @@ namespace SchemaCraftHub.Service
 
             return sqlBuilder.ToString();
         }
+
+        public async Task UpdateColumnsAsync(List<ColumnMetaDataDTO> columns)
+        {
+            try
+            {
+                foreach (var columnDTO in columns)
+                {
+                    var existingColumnEntity = await _context.ColumnMetaDataEntity.FindAsync(columnDTO.Id);
+
+                    if (existingColumnEntity != null)
+                    {
+                        // Update the properties of the existing entity
+                        existingColumnEntity.ColumnName = columnDTO.ColumnName;
+                        existingColumnEntity.Datatype = columnDTO.Datatype;
+                        existingColumnEntity.IsPrimaryKey = columnDTO.IsPrimaryKey;
+                        existingColumnEntity.IsForeignKey = columnDTO.IsForeignKey;
+                        existingColumnEntity.EntityId = columnDTO.EntityId;
+                        existingColumnEntity.ReferenceEntityID = columnDTO.ReferenceEntityID;
+                        existingColumnEntity.ReferenceColumnID = columnDTO.ReferenceColumnID;
+                        existingColumnEntity.Length = columnDTO.Length;
+                        existingColumnEntity.MinLength = columnDTO.MinLength;
+                        existingColumnEntity.MaxLength = columnDTO.MaxLength;
+                        existingColumnEntity.MaxRange = columnDTO.MaxRange;
+                        existingColumnEntity.MinRange = columnDTO.MinRange;
+                        existingColumnEntity.DateMinValue = columnDTO.DateMinValue;
+                        existingColumnEntity.DateMaxValue = columnDTO.DateMaxValue;
+                        existingColumnEntity.Description = columnDTO.Description;
+                        existingColumnEntity.IsNullable = columnDTO.IsNullable;
+                        existingColumnEntity.DefaultValue = columnDTO.DefaultValue;
+                        existingColumnEntity.True = columnDTO.True;
+                        existingColumnEntity.False = columnDTO.False;
+
+                        // Update other properties as needed
+
+                        // Mark the entity as modified
+                        _context.Entry(existingColumnEntity).State = EntityState.Modified;
+                    }
+                    else
+                    {
+                        // Log or handle the case where the column with the given ID is not found
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while updating columns.", ex);
+            }
+        }
+
     }
 }

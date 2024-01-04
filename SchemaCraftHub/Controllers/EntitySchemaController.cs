@@ -385,5 +385,33 @@ namespace SchemaCraftHub.Controllers
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }
+
+        [HttpPost("updatetables")]
+        public async Task<IActionResult> UpdateTable(List<ColumnMetaDataDTO> columns)
+        {
+            try
+            {
+                var updatetable = _entitySchemaService.UpdateColumnsAsync(columns);
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.Created,
+                    IsSuccess = true,
+                    Result = updatetable
+                };
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
     }
 }

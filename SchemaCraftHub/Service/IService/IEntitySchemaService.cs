@@ -17,6 +17,7 @@ namespace SchemaCraftHub.Service.IService
         public Task InsertColumnsAsync(List<ColumnMetaDataDTO> columns);
         public Task<Dictionary<string, List<TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1, DBConnectionDTO connectionDTO);
         public Task<APIResponse> convertandcallcreatetablemodel(DBConnectionDTO connectionDTO, TableRequest tableRequest);
+        public Task UpdateColumnsAsync(List<ColumnMetaDataDTO> columns);
 
     }
 }
