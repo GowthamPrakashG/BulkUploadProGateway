@@ -296,7 +296,7 @@ namespace SchemaCraftHub.Service
         }
 
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetClientSchema(ClientSchemaHub.Models.DTO.APIResponse tabledetails1, DBConnectionDTO connectionDTO)
-        {
+     {
             try
             {
                 if (tabledetails1.Result != null)
@@ -326,20 +326,31 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var tasks = table.Columns.Select(async columnDTO => new ColumnMetaDataDTO
+                                var columnEntities = new List<ColumnMetaDataDTO>();
+
+                                foreach (var columnDTO in table.Columns)
                                 {
-                                    ColumnName = columnDTO.ColumnName,
-                                    Datatype = columnDTO.DataType,
-                                    IsPrimaryKey = columnDTO.IsPrimaryKey,
-                                    IsForeignKey = columnDTO.HasForeignKey,
-                                    EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id,
-                                    ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id,
-                                    // Map other properties as needed
-                                }).ToList();
+                                    var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                    Nullable<int> ReferenceEntityID = null;
+                                    if (columnDTO.HasForeignKey)
+                                    {
+                                        ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                    }
+                                    var columnEntity = new ColumnMetaDataDTO
+                                    {
+                                        ColumnName = columnDTO.ColumnName,
+                                        Datatype = columnDTO.DataType,
+                                        IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                        IsForeignKey = columnDTO.HasForeignKey,
+                                        EntityId = EntityId,
+                                        ReferenceEntityID = ReferenceEntityID,
+                                        // Map other properties from ColumnDetailsDTO as needed
+                                    };
 
-                                var columnEntities = await Task.WhenAll(tasks);
+                                    columnEntities.Add(columnEntity);
+                                }
 
-                                await InsertColumnsAsync(columnEntities.ToList());
+                                await InsertColumnsAsync(columnEntities);
                             }
                         }
 
@@ -440,7 +451,7 @@ namespace SchemaCraftHub.Service
 
             var createquery = GenerateCreateTableSql(maptable);
 
-            string otherApiBaseUrl = "https://localhost:7246/EntityMigrate";
+            string otherApiBaseUrl = "https://localhost:7246";
 
             // Create HttpClient instance
             using (var httpClient = new HttpClient())
@@ -449,7 +460,7 @@ namespace SchemaCraftHub.Service
                 httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
                 // Call the other API to get table details
-                var response = await httpClient.GetAsync($"CreateTable?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={connectionDTO.Password}");
+                var response = await httpClient.GetAsync($"/EntityMigrate/CreateTable?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={connectionDTO.Password}&query={createquery}");
 
                 // Check if the request was successful
                 if (response.IsSuccessStatusCode)

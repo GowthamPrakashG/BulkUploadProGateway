@@ -334,18 +334,30 @@ namespace SchemaCraftHub.Controllers
                         // Parse the response content as needed (assuming it's JSON)
                         var tableDetails = JsonConvert.DeserializeObject<APIResponse>(responseContent);
 
-                        var responcedetials = await _entitySchemaService.GetClientSchema(tableDetails,connectionDTO);
-
-                        // Continue with your logic...
-
-                        var responseModel = new APIResponse
+                        if (!tableDetails.IsSuccess)
                         {
-                            StatusCode = HttpStatusCode.Created,
-                            IsSuccess = true,
-                            Result = tableDetails
-                        };
+                            var responseModel = new APIResponse
+                            {
+                                StatusCode = HttpStatusCode.OK,
+                                IsSuccess = false,
+                                Result = tableDetails.Result
+                            };
+                            return Ok(responseModel);
+                        }
+                        else
+                        {
+                            var responcedetials = await _entitySchemaService.GetClientSchema(tableDetails, connectionDTO);
 
-                        return Ok(responseModel);
+                            // Continue with your logic...
+
+                            var responseModel = new APIResponse
+                            {
+                                StatusCode = HttpStatusCode.Created,
+                                IsSuccess = true,
+                                Result = tableDetails
+                            };
+                            return Ok(responseModel);
+                        }
                     }
                     else
                     {

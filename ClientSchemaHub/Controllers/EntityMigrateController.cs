@@ -35,10 +35,10 @@ namespace ClientSchemaHub.Controllers
             {
                 var responseModel = new APIResponse
                 {
-                    StatusCode = HttpStatusCode.InternalServerError,
+                    StatusCode = HttpStatusCode.OK,
                     IsSuccess = false,
                     ErrorMessages = new List<string> { ex.Message },
-                    Result = null
+                    Result = ex.Message
                 };
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
