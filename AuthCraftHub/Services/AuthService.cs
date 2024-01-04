@@ -96,37 +96,27 @@ namespace AuthCraftHub.Services
 
         
         // User CRUD
-        internal async Task<UserDTO> CreateUserAsync(UserDTO userModel)
+        internal async Task<UserMaintenanceDTO> CreateUserAsync(UserMaintenanceDTO userModel)
         {
             var role = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == userModel.RoleId);
             bool isEmailExist = await _context.UserEntity.AnyAsync(u => u.Email == userModel.Email);
 
             if (role != null && isEmailExist == false)
             {
-                var newUser = new UserEntity
-                {
-                    Name = userModel.Name,
-                    RoleId = role.Id,
-                    Email = userModel.Email,
-                    Password = HashPassword(userModel.Password),
-                    Phonenumber = userModel.Phonenumber,
-                    Gender = userModel.Gender,
-                    DOB = userModel.DOB,
-                    Status = userModel.Status,
-                    CreatedDate = DateTime.UtcNow,
-                    UpdatedDate = DateTime.UtcNow
-                };
-
+                UserEntity newUser = new UserEntity();
+                _context.Entry(newUser).CurrentValues.SetValues(userModel);
                 _context.UserEntity.Add(newUser);
                 await _context.SaveChangesAsync();
-                return userModel;
+
+                UserMaintenanceDTO userMaintenanceDTO = (UserMaintenanceDTO)newUser;
+                return userMaintenanceDTO;
             }
             return null;
         }
 
         internal async Task<IEnumerable<UserDTO>> GetUsersAsync()
         {
-            var users = _context.UserEntity.ToList();
+            var users = _context.UserEntity.Include(c => c.Role).ToList();
 
             var userDTO = new List<UserDTO>();
 
@@ -138,7 +128,7 @@ namespace AuthCraftHub.Services
         internal async Task<UserDTO?> GetUserAsync(int id)
         {
 
-            var user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Id == id);
+            var user = await _context.UserEntity.Include(c => c.Role).FirstOrDefaultAsync(c => c.Id == id);
 
             if (user == null)
             {
@@ -152,7 +142,7 @@ namespace AuthCraftHub.Services
 
         internal async Task<UserDTO?> GetUserAsync(string email)
         {
-            var user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Email.Trim().ToLower() == email.Trim().ToLower());
+            var user = await _context.UserEntity.Include(c => c.Role).FirstOrDefaultAsync(c => c.Email.Trim().ToLower() == email.Trim().ToLower());
 
 
             if (user == null)
@@ -165,7 +155,7 @@ namespace AuthCraftHub.Services
             return userDTO;
         }
 
-        internal async Task<UserDTO> UpdateUserAsync(UserDTO userTableModelDTO)
+        internal async Task<UserMaintenanceDTO> UpdateUserAsync(UserMaintenanceDTO userTableModelDTO)
         {
             UserEntity user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Id == userTableModelDTO.Id);
             var role = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == userTableModelDTO.RoleId);
@@ -176,7 +166,9 @@ namespace AuthCraftHub.Services
                 userTableModelDTO.Password = HashPassword(userTableModelDTO.Password);
                 _context.Entry<UserEntity>(user).CurrentValues.SetValues(userTableModelDTO);
                 _context.SaveChanges();
-                return userTableModelDTO;
+
+                UserMaintenanceDTO userMaintenanceDTO = (UserMaintenanceDTO)user;
+                return userMaintenanceDTO;
             }
 
             return null;

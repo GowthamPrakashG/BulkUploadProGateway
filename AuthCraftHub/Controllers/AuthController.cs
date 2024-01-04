@@ -59,7 +59,7 @@ namespace AuthCraftHub.Controllers
         }
 
         [HttpPost("createUser")]
-        public async Task<IActionResult> CreateUser([FromBody] UserDTO userModel)
+        public async Task<IActionResult> CreateUser([FromBody] UserMaintenanceDTO userModel)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace AuthCraftHub.Controllers
         }
 
         [HttpPut("UpdateUserbyId")]
-        public async Task<IActionResult> UpdateUser([FromBody] UserDTO userModel)
+        public async Task<IActionResult> UpdateUser([FromBody] UserMaintenanceDTO userModel)
         {
             try
             {
