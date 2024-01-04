@@ -435,7 +435,7 @@ namespace SchemaCraftHub.Service
             TableDetailsDTO maptable = new TableDetailsDTO
             {
                 TableName = tableRequest.Table.EntityName,
-                Columns = MapColumns(tableRequest.Columns)
+                Columns = await MapColumns(tableRequest.Columns)
             };
 
             var createquery = GenerateCreateTableSql(maptable);
@@ -480,20 +480,50 @@ namespace SchemaCraftHub.Service
 
         }
 
-        private List<ColumnDetailsDTO> MapColumns(List<ColumnMetaDataDTO> columns)
+        //private List<ColumnDetailsDTO> MapColumns(List<ColumnMetaDataDTO> columns)
+        //{
+        //    // Map only the required properties from ColumnMetaDataDTO to ColumnDetailsDTO
+        //    return columns.Select(column => new ColumnDetailsDTO
+        //    {
+        //        ColumnName = column.ColumnName,
+        //        DataType = column.Datatype,
+        //        IsPrimaryKey = column.IsPrimaryKey,
+        //        HasForeignKey = column.IsForeignKey,
+        //        ReferencedTable = GetTableByIdAsync(column.ReferenceEntityID ?? 0).Result.EntityName,
+        //        ReferencedColumn = GetColumnByIdAsync(column.ReferenceColumnID ?? 0).Result.ColumnName
+        //        // Add other properties as needed
+        //    }).ToList();
+        //}
+
+        private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnMetaDataDTO> columns)
         {
-            // Map only the required properties from ColumnMetaDataDTO to ColumnDetailsDTO
-            return columns.Select(column => new ColumnDetailsDTO
+            var columnDetailsList = new List<ColumnDetailsDTO>();
+
+            foreach (var column in columns)
             {
-                ColumnName = column.ColumnName,
-                DataType = column.Datatype,
-                IsPrimaryKey = column.IsPrimaryKey,
-                HasForeignKey = column.IsForeignKey,
-                ReferencedTable = GetTableByIdAsync(column.ReferenceEntityID ?? 0).Result.EntityName,
-                ReferencedColumn = GetColumnByIdAsync(column.ReferenceColumnID ?? 0).Result.ColumnName
-                // Add other properties as needed
-            }).ToList();
+                var referencedTable = await GetTableByIdAsync(column.ReferenceEntityID ?? 0);
+                var referencedColumn = await GetColumnByIdAsync(column.ReferenceColumnID ?? 0);
+
+                var columnDetails = new ColumnDetailsDTO
+                {
+                    ColumnName = column.ColumnName,
+                    DataType = column.Datatype,
+                    IsPrimaryKey = column.IsPrimaryKey,
+                    HasForeignKey = column.IsForeignKey,
+                    ReferencedTable = referencedTable?.EntityName,
+                    ReferencedColumn = referencedColumn?.ColumnName
+                    // Add other properties as needed
+                };
+
+                columnDetailsList.Add(columnDetails);
+            }
+
+            return columnDetailsList;
         }
+
+
+
+
 
         private string GenerateCreateTableSql(TableDetailsDTO mapTable)
         {

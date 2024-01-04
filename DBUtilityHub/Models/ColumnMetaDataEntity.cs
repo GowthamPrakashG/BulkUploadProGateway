@@ -16,21 +16,22 @@ namespace DBUtilityHub.Models
         public int EntityId { get; set; }
 
         // Navigation property for the relationship with EntityListMetadata
-        [ForeignKey("TableMetaDataId")]
-        public TableMetaDataEntity Entity { get; set; }
+        //[ForeignKey("EntityId")]
+        //public virtual TableMetaDataEntity Entity { get; set; }
 
         // Other properties...
 
         // Foreign keys for relationship with EntityListMetadata
         public int? ReferenceEntityID { get; set; }
-        public int? ReferenceColumnID { get; set; }
 
         // Navigation properties for relationships with EntityListMetadata
-        [ForeignKey("ReferenceTableMetaDataId")]
-        public TableMetaDataEntity ReferenceEntity { get; set; }
+        //[ForeignKey("ReferenceEntityID")]
+        //public TableMetaDataEntity ReferenceEntity { get; set; }
 
-        [ForeignKey("ReferenceColumnMetaDataId")]
-        public ColumnMetaDataEntity ReferenceColumn { get; set; }
+        public int? ReferenceColumnID { get; set; }
+
+        //[ForeignKey("ReferenceColumnID")]
+        //public ColumnMetaDataEntity ReferenceColumn { get; set; }
         public int? Length { get; set; }
         public int? MinLength { set; get; }
         public int? MaxLength { set; get; }
