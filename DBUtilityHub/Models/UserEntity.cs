@@ -13,6 +13,8 @@ namespace DBUtilityHub.Models
         [ForeignKey("RoleId")]
         public int RoleId { get; set; }
 
+        public virtual RoleEntity Role { get; set; }
+
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string Email { get; set; }
 

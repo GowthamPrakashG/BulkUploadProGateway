@@ -1,5 +1,6 @@
 ﻿
 using DBUtilityHub.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -23,7 +24,27 @@ namespace DBUtilityHub.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<RoleEntity>().HasData(
+                new RoleEntity
+                {
+                    Id = 1,
+                    RoleName = "Super Admin"
+                 
+                });
+            modelBuilder.Entity<UserEntity>().HasData(
+                new UserEntity
+                {
+                    Id = 1,
+                    Name = "Super Admin User",
+                    RoleId = 1,
+                    Email = "superadminuser@datayaan.com",
+                    Password = new PasswordHasher<UserEntity>().HashPassword(null, "Datayaan@123"),
+                    Phonenumber = "",
+                    Gender = "",
+                    Status = true
+
+                });
         }
 
     }
