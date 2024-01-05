@@ -71,6 +71,14 @@ namespace AuthCraftHub.Controllers
                     return BadRequest(_response);
                 }
 
+                if (_authService.GetUserAsync(userModel.Email) != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "Failed to create user. EmailId already exist" };
+                    return BadRequest(_response); 
+                }
+
                 var createdUser = await _authService.CreateUserAsync(userModel);
 
                 if (createdUser != null)
@@ -84,7 +92,7 @@ namespace AuthCraftHub.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessage = new List<string>() { "Failed to create user. Check role details and EmailId" };
+                    _response.ErrorMessage = new List<string>() { "Failed to create user. Check role details" };
                     return BadRequest(_response);
                 }
             }
@@ -140,6 +148,43 @@ namespace AuthCraftHub.Controllers
                 }
 
                 var getUser = await _authService.GetUserAsync(id);
+
+                if (getUser == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The user with the specified ID does not exist in the database. Please check the provided user ID and try again." };
+                    return NotFound(_response);
+                }
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getUser;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
+            }
+        }
+
+        [HttpGet("GetUserbyRoleId")]
+        public async Task<IActionResult> GetUserByRole(int Roleid)
+        {
+            try
+            {
+                if (Roleid == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadGateway;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The 'id' parameter cannot be 0 or null." };
+                    return BadRequest(_response);
+                }
+
+                var getUser = await _authService.GetUserByRoleAsync(Roleid);
 
                 if (getUser == null)
                 {
@@ -238,14 +283,16 @@ namespace AuthCraftHub.Controllers
             }
         }
 
-        [HttpGet("getRoleIdsAndNames")]
-        public ActionResult<List<RoleDTO>> GetRoleIdsAndNames()
+        // Role Endpoints
+
+        [HttpGet("getRoles")]
+        public ActionResult<List<RoleDTO>> GetRoles()
         {
             try
             {
-                var roleData = _authService.GetRoleIdsAndNames();
+                var roleData = _authService.GetRoles();
 
-                if (roleData != null && roleData.Any())
+                if (roleData != null)
                 {
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -259,6 +306,43 @@ namespace AuthCraftHub.Controllers
                     _response.ErrorMessage = new List<string>() { "There are no roles in the database. Please ensure that roles records exist and try again." };
                     return StatusCode(204, _response);
                 }
+            }
+            catch (Exception ex)
+            {
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
+            }
+        }
+
+        [HttpGet("getRoleById")]
+        public ActionResult<RoleDTO> GetRole(int roleID)
+        {
+            try
+            {
+                if (roleID == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadGateway;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The 'roleID' parameter cannot be 0 or null." };
+                    return BadRequest(_response);
+                }
+
+                var getRole =  _authService.GetRoleById(roleID);
+
+                if (getRole == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The Role with the specified roleID does not exist in the database. Please check the provided role ID and try again." };
+                    return NotFound(_response);
+                }
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getRole;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
