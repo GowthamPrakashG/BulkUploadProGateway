@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkUploadProGateway", "BulkUploadProGateway\BulkUploadProGateway.csproj", "{8DE45147-3BC6-4F13-B7F2-2B9573834F5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BulkUploadProGateway", "BulkUploadProGateway\BulkUploadProGateway.csproj", "{8DE45147-3BC6-4F13-B7F2-2B9573834F5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthCraftHub", "AuthCraftHub\AuthCraftHub.csproj", "{8D86D693-48D9-4909-9195-C7CD5BE39A19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthCraftHub", "AuthCraftHub\AuthCraftHub.csproj", "{8D86D693-48D9-4909-9195-C7CD5BE39A19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSchemaHub", "ClientSchemaHub\ClientSchemaHub.csproj", "{DDEA0925-755B-4DA2-85FB-93747C310CFF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientSchemaHub", "ClientSchemaHub\ClientSchemaHub.csproj", "{DDEA0925-755B-4DA2-85FB-93747C310CFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaCraftHub", "SchemaCraftHub\SchemaCraftHub.csproj", "{090C101C-EAF3-497A-B3CA-71BFCBF0D820}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SchemaCraftHub", "SchemaCraftHub\SchemaCraftHub.csproj", "{090C101C-EAF3-497A-B3CA-71BFCBF0D820}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelSyncHub", "ExcelSyncHub\ExcelSyncHub.csproj", "{E7FB8709-5298-4679-ADF0-F259D91F5CC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelSyncHub", "ExcelSyncHub\ExcelSyncHub.csproj", "{E7FB8709-5298-4679-ADF0-F259D91F5CC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBUtilityHub", "DBUtilityHub\DBUtilityHub.csproj", "{F6E91134-EE81-4277-8730-9BABCE949B64}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBUtilityHub", "DBUtilityHub\DBUtilityHub.csproj", "{F6E91134-EE81-4277-8730-9BABCE949B64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

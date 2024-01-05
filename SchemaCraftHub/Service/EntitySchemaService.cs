@@ -170,7 +170,7 @@ namespace SchemaCraftHub.Service
         {
             try
             {
-                var column = await _context.ColumnMetaDataEntity.FindAsync(id);
+                var column = await _context.ColumnMetaDataEntity.FirstOrDefaultAsync(x=>x.Id == id);
 
                 if (column == null)
                 {
@@ -310,15 +310,18 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var tablename = new TableMetaDataDTO
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
+                                if (table_exists == null)
                                 {
-                                    EntityName = table.TableName,
-                                    HostName = connectionDTO.HostName,
-                                    DatabaseName = connectionDTO.DataBase,
-                                    Provider = connectionDTO.Provider
-                                };
-
-                                await CreateTableAsync(tablename);
+                                    var tablename = new TableMetaDataDTO
+                                    {
+                                        EntityName = table.TableName,
+                                        HostName = connectionDTO.HostName,
+                                        DatabaseName = connectionDTO.DataBase,
+                                        Provider = connectionDTO.Provider
+                                    };
+                                    await CreateTableAsync(tablename);
+                                }
                             }
                         }
 
@@ -326,31 +329,36 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var columnEntities = new List<ColumnMetaDataDTO>();
-
-                                foreach (var columnDTO in table.Columns)
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
+                                
+                                if (table_exists == null)
                                 {
-                                    var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
-                                    Nullable<int> ReferenceEntityID = null;
-                                    if (columnDTO.HasForeignKey)
+                                    var columnEntities = new List<ColumnMetaDataDTO>();
+
+                                    foreach (var columnDTO in table.Columns)
                                     {
-                                        ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                        var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                        Nullable<int> ReferenceEntityID = null;
+                                        if (columnDTO.HasForeignKey)
+                                        {
+                                            ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                        }
+                                        var columnEntity = new ColumnMetaDataDTO
+                                        {
+                                            ColumnName = columnDTO.ColumnName,
+                                            Datatype = columnDTO.DataType,
+                                            IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                            IsForeignKey = columnDTO.HasForeignKey,
+                                            EntityId = EntityId,
+                                            ReferenceEntityID = ReferenceEntityID,
+                                            // Map other properties from ColumnDetailsDTO as needed
+                                        };
+
+                                        columnEntities.Add(columnEntity);
                                     }
-                                    var columnEntity = new ColumnMetaDataDTO
-                                    {
-                                        ColumnName = columnDTO.ColumnName,
-                                        Datatype = columnDTO.DataType,
-                                        IsPrimaryKey = columnDTO.IsPrimaryKey,
-                                        IsForeignKey = columnDTO.HasForeignKey,
-                                        EntityId = EntityId,
-                                        ReferenceEntityID = ReferenceEntityID,
-                                        // Map other properties from ColumnDetailsDTO as needed
-                                    };
 
-                                    columnEntities.Add(columnEntity);
+                                    await InsertColumnsAsync(columnEntities);
                                 }
-
-                                await InsertColumnsAsync(columnEntities);
                             }
                         }
 
@@ -559,7 +567,7 @@ namespace SchemaCraftHub.Service
             {
                 foreach (var columnDTO in columns)
                 {
-                    var existingColumnEntity = await _context.ColumnMetaDataEntity.FindAsync(columnDTO.Id);
+                    var existingColumnEntity = await _context.ColumnMetaDataEntity.FirstOrDefaultAsync(x => x.Id == columnDTO.Id);
 
                     if (existingColumnEntity != null)
                     {
