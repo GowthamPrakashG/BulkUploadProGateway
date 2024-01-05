@@ -595,15 +595,15 @@ namespace SchemaCraftHub.Service
                         // Update other properties as needed
 
                         // Mark the entity as modified
-                        _context.Entry(existingColumnEntity).State = EntityState.Modified;
+                        _context.ColumnMetaDataEntity.Update(existingColumnEntity);
                     }
                     else
                     {
-                        // Log or handle the case where the column with the given ID is not found
+                        throw new ApplicationException("Column not found");
                     }
                 }
 
-                await _context.SaveChangesAsync();
+                _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {

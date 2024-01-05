@@ -17,9 +17,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddScoped<IEntitySchemaService, EntitySchemaService>();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var app = builder.Build();
-
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

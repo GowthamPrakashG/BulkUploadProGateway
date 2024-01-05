@@ -235,7 +235,7 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        [HttpGet("columns/{entityId}")]
+        [HttpGet("columns/entity/{entityId}")]
         public async Task<IActionResult> GetColumnsByEntityId(int entityId)
         {
             try
