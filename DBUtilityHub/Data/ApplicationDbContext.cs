@@ -29,30 +29,18 @@ namespace DBUtilityHub.Data
                 new RoleEntity
                 {
                     Id = 1,
-                    RoleName = "Admin"
+                    RoleName = "Super Admin"
                  
-                },
-                new RoleEntity
-                {
-                    Id = 2,
-                    RoleName = "Developer"
-
-                },
-                new RoleEntity
-                {
-                    Id = 3,
-                    RoleName = "Tester"
-
                 });
             modelBuilder.Entity<UserEntity>().HasData(
                 new UserEntity
                 {
                     Id = 1,
-                    Name = "SuperUser",
+                    Name = "Super Admin User",
                     RoleId = 1,
-                    Email = "superuser@datayaan.com",
+                    Email = "superadminuser@datayaan.com",
                     Password = new PasswordHasher<UserEntity>().HashPassword(null, "Datayaan@123"),
-                    Phonenumber = "9876543210",
+                    Phonenumber = "",
                     Gender = "",
                     Status = true
 
