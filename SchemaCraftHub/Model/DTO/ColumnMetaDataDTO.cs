@@ -1,12 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
-namespace DBUtilityHub.Models
+﻿namespace SchemaCraftHub.Model.DTO
 {
-    public class ColumnMetaDataEntity : BaseModel
+    public class ColumnMetaDataDTO
     {
-        [Key]
         public int Id { get; set; }
         public string ColumnName { get; set; }
         public string Datatype { get; set; }
@@ -21,7 +16,7 @@ namespace DBUtilityHub.Models
         public int? MaxRange { set; get; }
         public int? MinRange { set; get; }
         public string? DateMinValue { set; get; }
-        public string? DateMaxValue { set; get; }    
+        public string? DateMaxValue { set; get; }
         public string? Description { get; set; }
         public bool IsNullable { get; set; }
         public string? DefaultValue { get; set; }

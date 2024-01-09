@@ -3,6 +3,7 @@ using System;
 using DBUtilityHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DBUtilityHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240103061734_DBUtility")]
+    partial class DBUtility
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,15 +56,18 @@ namespace DBUtilityHub.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("DefaultValue")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("EntityId")
                         .HasColumnType("integer");
 
                     b.Property<string>("False")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsForeignKey")
@@ -91,10 +97,20 @@ namespace DBUtilityHub.Migrations
                     b.Property<int?>("ReferenceColumnID")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ReferenceColumnMetaDataId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ReferenceEntityID")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ReferenceTableMetaDataId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TableMetaDataId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("True")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("UpdatedBy")
@@ -104,6 +120,12 @@ namespace DBUtilityHub.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ReferenceColumnMetaDataId");
+
+                    b.HasIndex("ReferenceTableMetaDataId");
+
+                    b.HasIndex("TableMetaDataId");
 
                     b.ToTable("ColumnMetaDataEntity");
                 });
@@ -188,23 +210,6 @@ namespace DBUtilityHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RoleEntity");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            RoleName = "Admin"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            RoleName = "Developer"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            RoleName = "Tester"
-                        });
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.TableMetaDataEntity", b =>
@@ -300,24 +305,33 @@ namespace DBUtilityHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserEntity");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6205),
-                            DOB = new DateOnly(1, 1, 1),
-                            Email = "superuser@datayaan.com",
-                            Gender = "",
-                            Name = "SuperUser",
-                            Password = "AQAAAAIAAYagAAAAEFUwAGdRht/x8RmJmb5mMyb9u/acQMHafPJk3Vd1DvumKRIMpk0WGGulJr4uInTBLA==",
-                            Phonenumber = "9876543210",
-                            RoleId = 1,
-                            Status = true,
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6211)
-                        });
+            modelBuilder.Entity("DBUtilityHub.Models.ColumnMetaDataEntity", b =>
+                {
+                    b.HasOne("DBUtilityHub.Models.ColumnMetaDataEntity", "ReferenceColumn")
+                        .WithMany()
+                        .HasForeignKey("ReferenceColumnMetaDataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DBUtilityHub.Models.TableMetaDataEntity", "ReferenceEntity")
+                        .WithMany()
+                        .HasForeignKey("ReferenceTableMetaDataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DBUtilityHub.Models.TableMetaDataEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("TableMetaDataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("ReferenceColumn");
+
+                    b.Navigation("ReferenceEntity");
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.LogChild", b =>

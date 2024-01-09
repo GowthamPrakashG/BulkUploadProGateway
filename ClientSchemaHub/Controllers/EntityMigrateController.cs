@@ -35,6 +35,34 @@ namespace ClientSchemaHub.Controllers
             {
                 var responseModel = new APIResponse
                 {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = ex.Message
+                };
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("CreateTable")]
+        public async Task<ActionResult<APIResponse>> CreateTable([FromQuery] DBConnectionDTO connectionDto,string query)
+        {
+            try
+            {
+                var tabledetails = await _generalDatabaseService.CreateTable(connectionDto,query);
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = tabledetails
+                };
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
                     ErrorMessages = new List<string> { ex.Message },

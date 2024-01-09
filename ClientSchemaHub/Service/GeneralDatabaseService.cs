@@ -93,6 +93,27 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
+
+        public async Task<bool> CreateTable(DBConnectionDTO connectionDTO, string query)
+        {
+            try
+            {
+                switch (connectionDTO.Provider)
+                {
+                    case "postgresql":
+                        return await _postgreSQLService.ConvertAndCallCreateTableModel(connectionDTO, query);
+                    case "mysql": // Add the MySQL case
+                        return await _mySQLService.ConvertAndCallCreateTableModel(connectionDTO, query);
+                    // Add cases for other database providers
+                    default:
+                        throw new ArgumentException("Unsupported database provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
     }
 
 }
