@@ -2,7 +2,6 @@ using DBUtilityHub.Data;
 using Microsoft.EntityFrameworkCore;
 using SchemaCraftHub.Service.IService;
 using SchemaCraftHub.Service;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Configuration.SetBasePath(Directory.GetParent(Directory.GetCurrentDirectory()).ToString()).AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IEntitySchemaService, EntitySchemaService>();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);

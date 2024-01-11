@@ -387,7 +387,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpPost("updatetables")]
-        public async Task<IActionResult> UpdateTable(List<ColumnMetaDataDTO> columns)
+        public async Task<IActionResult> UpdateTable(List<Model.DTO.ColumnMetaDataDTO> columns)
         {
             try
             {

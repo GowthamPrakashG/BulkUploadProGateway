@@ -3,6 +3,7 @@ using Dapper;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Npgsql;
+using System.Data;
 
 namespace ClientSchemaHub.Service
 {
@@ -91,7 +92,7 @@ namespace ClientSchemaHub.Service
             return (await connection.QueryAsync<string>(query)).AsList();
         }
 
-        
+
         //Get Table column properties
         public async Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO dBConnection, string tableName)
         {
@@ -202,7 +203,7 @@ namespace ClientSchemaHub.Service
         }
 
 
-        // Get all rescords from the specific table
+        // Get PrimaryKey rescords from the specific table
         public async Task<List<dynamic>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
         {
             try
@@ -291,8 +292,122 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
-            // Build Connection string
-            private string BuildConnectionString(DBConnectionDTO connectionDTO)
+
+        //Insert data
+        public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>> convertedDataList, List<ColumnMetaDataDTO> booleancolumns, string tablename)
+        {
+            List<Dictionary<string, string>> dataToRemove = new List<Dictionary<string, string>>();
+
+            foreach (var data2 in convertedDataList)
+            {
+                foreach (var boolvalue in booleancolumns)
+                {
+                    if (data2.ContainsKey(boolvalue.ColumnName))
+                    {
+                        // Update the value for the specific key
+                        var value = data2[boolvalue.ColumnName];
+                        if (value.ToLower() == boolvalue.True.ToLower())
+                        {
+                            data2[boolvalue.ColumnName] = "1";
+                        }
+                        else
+                        {
+                            data2[boolvalue.ColumnName] = "0";
+                        }
+                    }
+                }
+                try
+                {
+                    string connectionString = BuildConnectionString(connectionDTO);
+
+                    using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                    {
+
+                        connection.Open();
+
+                        using (NpgsqlCommand cmd = new NpgsqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            // Build the INSERT statement
+
+                            string columns2 = string.Join(", ", data2.Keys.Select(k => $"\"{k}\"")); // Use double quotes for case-sensitive column names
+
+                            string values = string.Join(", ", data2.Values.Select(v => $"'{v}'")); // Wrap values in single quotes for strings
+
+                            string query = $"INSERT INTO \"{tablename}\" ({columns2}) VALUES ({values})"; // Use double quotes for case-sensitive table name
+
+                            cmd.CommandText = query;
+
+                            cmd.ExecuteNonQuery();
+
+                            dataToRemove.Add(data2);
+
+                        }
+                        connection.Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.ToString());
+                }
+            }
+            return true;
+        }
+
+        //Check table exists
+        public async Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName)
+        {
+            try
+            {
+                string connectionString = BuildConnectionString(dBConnection);
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("Connection string not found in the session.");
+                }
+                using (var dbConnection = new NpgsqlConnection(connectionString))
+                {
+                    // Open the connection
+                    dbConnection.Open();
+
+                    // Use Dapper to execute a parameterized query to check if the table exists
+                    string query = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = @TableName)";
+                    bool tableExists = dbConnection.QueryFirstOrDefault<bool>(query, new { TableName = tableName });
+
+                    return tableExists;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        //Get Table datas
+        public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
+        {
+            string connectionString = BuildConnectionString(dBConnection);
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string not found in the session.");
+            }
+
+            using (IDbConnection dbConnection = new NpgsqlConnection(connectionString))
+            {
+                dbConnection.Open();
+
+                // Dynamically query the table based on the provided table name and EntityColumnName
+                string rowDataQuery = $"SELECT * FROM public.\"{tableName}\"";
+
+                // Use Dapper to execute the query and return the results
+                var rows = dbConnection.Query(rowDataQuery).ToList();
+
+                return rows;
+            }
+        }
+
+        // Build Connection string
+        private string BuildConnectionString(DBConnectionDTO connectionDTO)
         {
             // Build and return the connection string based on the DTO properties
             // This is just a simple example; in a real-world scenario, you would want to handle this more securely

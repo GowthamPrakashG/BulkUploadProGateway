@@ -114,6 +114,69 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
+
+        public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>> convertedDataList, List<ColumnMetaDataDTO> booleancolumns, string tablename)
+        {
+            try
+            {
+                switch (connectionDTO.Provider)
+                {
+                    case "postgresql":
+                        return await _postgreSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
+                    case "mysql": // Add the MySQL case
+                        return await _postgreSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);//Change
+                    // Add cases for other database providers
+                    default:
+                        throw new ArgumentException("Unsupported database provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        public async Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName)
+        {
+            try
+            {
+                switch (dBConnection.Provider)
+                {
+                    case "postgresql":
+                        return await _postgreSQLService.IsTableExists(dBConnection, tableName);
+                    case "mysql": // Add the MySQL case
+                        return await _postgreSQLService.IsTableExists(dBConnection, tableName);//Changes
+                    // Add cases for other database providers
+                    default:
+                        throw new ArgumentException("Unsupported database provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
+        {
+            try
+            {
+                switch (dBConnection.Provider)
+                {
+                    case "postgresql":
+                        return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                    case "mysql": // Add the MySQL case
+                        return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                    // Add cases for other database providers
+                    default:
+                        throw new ArgumentException("Unsupported database provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
     }
 
 }

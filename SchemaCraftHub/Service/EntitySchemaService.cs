@@ -126,13 +126,13 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<ColumnMetaDataDTO>> GetAllColumnsAsync()
+        public async Task<List<Model.DTO.ColumnMetaDataDTO>> GetAllColumnsAsync()
         {
             try
             {
                 var columns = await _context.ColumnMetaDataEntity.ToListAsync();
 
-                var columnDTOs = columns.Select(column => new ColumnMetaDataDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.ColumnMetaDataDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -166,7 +166,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<ColumnMetaDataDTO> GetColumnByIdAsync(int id)
+        public async Task<Model.DTO.ColumnMetaDataDTO> GetColumnByIdAsync(int id)
         {
             try
             {
@@ -178,7 +178,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new ColumnMetaDataDTO
+                var columnDTO = new Model.DTO.ColumnMetaDataDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -210,7 +210,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<ColumnMetaDataDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
+        public async Task<Model.DTO.ColumnMetaDataDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new ColumnMetaDataDTO
+                var columnDTO = new Model.DTO.ColumnMetaDataDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -254,7 +254,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<ColumnMetaDataDTO>> GetColumnsByEntityIdAsync(int entityId)
+        public async Task<List<Model.DTO.ColumnMetaDataDTO>> GetColumnsByEntityIdAsync(int entityId)
         {
             try
             {
@@ -262,7 +262,7 @@ namespace SchemaCraftHub.Service
                     .Where(column => column.EntityId == entityId)
                     .ToListAsync();
 
-                var columnDTOs = columns.Select(column => new ColumnMetaDataDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.ColumnMetaDataDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -333,7 +333,7 @@ namespace SchemaCraftHub.Service
                                 
                                 if (table_exists == null)
                                 {
-                                    var columnEntities = new List<ColumnMetaDataDTO>();
+                                    var columnEntities = new List<Model.DTO.ColumnMetaDataDTO>();
 
                                     foreach (var columnDTO in table.Columns)
                                     {
@@ -343,7 +343,7 @@ namespace SchemaCraftHub.Service
                                         {
                                             ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
                                         }
-                                        var columnEntity = new ColumnMetaDataDTO
+                                        var columnEntity = new Model.DTO.ColumnMetaDataDTO
                                         {
                                             ColumnName = columnDTO.ColumnName,
                                             Datatype = columnDTO.DataType,
@@ -411,7 +411,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task InsertColumnsAsync(List<ColumnMetaDataDTO> columns)
+        public async Task InsertColumnsAsync(List<Model.DTO.ColumnMetaDataDTO> columns)
         {
             try
             {
@@ -499,7 +499,7 @@ namespace SchemaCraftHub.Service
 
         }
 
-         private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnMetaDataDTO> columns)
+         private async Task<List<ColumnDetailsDTO>> MapColumns(List<Model.DTO.ColumnMetaDataDTO> columns)
         {
             var columnDetailsList = new List<ColumnDetailsDTO>();
 
@@ -561,7 +561,7 @@ namespace SchemaCraftHub.Service
             return sqlBuilder.ToString();
         }
 
-        public async Task UpdateColumnsAsync(List<ColumnMetaDataDTO> columns)
+        public async Task UpdateColumnsAsync(List<Model.DTO.ColumnMetaDataDTO> columns)
         {
             try
             {
