@@ -1478,23 +1478,13 @@ namespace ExcelSyncHub.Service
                     // Set the base address for the external API
                     httpClient.BaseAddress = new Uri("https://localhost:7246");
 
-                    // Create the request model
-                    var insertDataRequest = new InsertDataRequest
-                    {
-                        ConnectionDTO = connectionDTO,
-                        ConvertedDataList = convertedDataList,
-                        BooleanColumns = booleancolumns,
-                        TableName = tableName
-                    };
-
-                    // Convert the request model to JSON
-                    var jsonRequest = JsonConvert.SerializeObject(insertDataRequest);
-
-                    // Create the HTTP content
-                    var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                    var queryParams = $"?connectionDTO={JsonConvert.SerializeObject(connectionDTO)}" +
+                          $"&convertedDataList={JsonConvert.SerializeObject(convertedDataList)}" +
+                          $"&booleanColumns={JsonConvert.SerializeObject(booleancolumns)}" +
+                          $"&tableName={tableName}";
 
                     // Call the external API
-                    var response = await httpClient.PostAsync("/EntityMigrate/InsertData", content);
+                    var response = await httpClient.PostAsync($"/EntityMigrate/InsertData{queryParams}", null);
 
                     // Check the response status
                     if (response.IsSuccessStatusCode)

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using System.Net;
+using Swashbuckle.AspNetCore.Annotations;
+using Newtonsoft.Json;
 
 namespace ClientSchemaHub.Controllers
 {
@@ -44,11 +46,11 @@ namespace ClientSchemaHub.Controllers
         }
 
         [HttpGet("CreateTable")]
-        public async Task<ActionResult<APIResponse>> CreateTable([FromQuery] DBConnectionDTO connectionDto,string query)
+        public async Task<ActionResult<APIResponse>> CreateTable([FromQuery] DBConnectionDTO connectionDto, string query)
         {
             try
             {
-                var tabledetails = await _generalDatabaseService.CreateTable(connectionDto,query);
+                var tabledetails = await _generalDatabaseService.CreateTable(connectionDto, query);
 
                 var responseModel = new APIResponse
                 {
@@ -72,16 +74,22 @@ namespace ClientSchemaHub.Controllers
         }
 
         [HttpPost("InsertData")]
-        public async Task<ActionResult<APIResponse>> InsertData([FromBody] InsertDataRequest request)
+        public async Task<ActionResult<APIResponse>> InsertData(
+    [FromQuery] string connectionDTO,
+    [FromQuery] string convertedDataList,
+    [FromQuery] string booleanColumns,
+    [FromQuery] string tableName)
         {
             try
             {
-                var success = await _generalDatabaseService.Insertdata(
-                    request.ConnectionDTO,
-                    request.ConvertedDataList,
-                    request.BooleanColumns,
-                    request.TableName
-                );
+                // Convert the string parameters to their respective types (e.g., deserialize JSON strings).
+                DBConnectionDTO connection = JsonConvert.DeserializeObject<DBConnectionDTO>(connectionDTO);
+                List<Dictionary<string, string>> convertedData = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(convertedDataList);
+                List<ColumnMetaDataDTO> booleanColumnsList = JsonConvert.DeserializeObject<List<ColumnMetaDataDTO>>(booleanColumns);
+
+                // Your action code...
+
+                var success = await _generalDatabaseService.Insertdata(connection, convertedData, booleanColumnsList, tableName);
 
                 var responseModel = new APIResponse
                 {
@@ -105,6 +113,7 @@ namespace ClientSchemaHub.Controllers
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }
+
 
         [HttpGet("IsTableExists")]
         public async Task<ActionResult<APIResponse>> IsTableExists([FromQuery] DBConnectionDTO connectionDto, string tableName)
