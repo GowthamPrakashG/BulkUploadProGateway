@@ -1,6 +1,6 @@
 ﻿namespace SchemaCraftHub.Model.DTO
 {
-    public class ColumnMetaDataDTO
+    public class CloumnDTO
     {
         public int Id { get; set; }
         public string ColumnName { get; set; }

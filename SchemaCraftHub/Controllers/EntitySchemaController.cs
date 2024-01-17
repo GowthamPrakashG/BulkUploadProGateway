@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using ClientSchemaHub.Models.DTO;
-using ClientSchemaHub.Service;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
@@ -264,7 +262,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpPost("createtables")]
-        public async Task<IActionResult> InsertTable([FromQuery]DBConnectionDTO connectionDTO, [FromBody] TableRequest tableRequest)
+        public async Task<IActionResult> InsertTable([FromQuery] DBConnectionDTO connectionDTO, [FromBody] TableRequest tableRequest)
         {
             try
             {
@@ -305,6 +303,7 @@ namespace SchemaCraftHub.Controllers
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }
+
 
         [HttpPost("cliententity")]
         public async Task<IActionResult> ClientEntity([FromQuery] DBConnectionDTO connectionDTO)
@@ -387,7 +386,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpPost("updatetables")]
-        public async Task<IActionResult> UpdateTable(List<Model.DTO.ColumnMetaDataDTO> columns)
+        public async Task<IActionResult> UpdateTable([FromBody]List<CloumnDTO> columns)
         {
             try
             {

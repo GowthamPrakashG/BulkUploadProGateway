@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SchemaCraftHub.Models.DTO
+namespace SchemaCraftHub.Model.DTO
 {
     public class APIResponse
     {
