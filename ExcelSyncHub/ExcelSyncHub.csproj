@@ -7,11 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EPPlus" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
     <PackageReference Include="Npgsql" Version="7.0.4" />
 	  
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
+	  
+	  <PackageReference Include="Spire.XLS" Version="14.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Service\IService\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DBUtilityHub\DBUtilityHub.csproj" />
   </ItemGroup>
 
 </Project>

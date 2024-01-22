@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SchemaCraftHub.Model.DTO
+namespace ExcelSyncHub.Models.DTO
 {
     public class APIResponse
     {

@@ -1,4 +1,4 @@
-﻿namespace SchemaCraftHub.Model.DTO
+﻿namespace ExcelSyncHub.Model.DTO
 {
     public class ColumnMetaDataDTO
     {

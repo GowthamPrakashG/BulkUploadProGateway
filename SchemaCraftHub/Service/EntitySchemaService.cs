@@ -1,12 +1,12 @@
-﻿using ClientSchemaHub.Models.DTO;
-using DBUtilityHub.Data;
+﻿using DBUtilityHub.Data;
 using DBUtilityHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
-using System.Net;
 using System.Text;
+using APIResponse = SchemaCraftHub.Model.DTO.APIResponse;
+using ColumnDetailsDTO = ClientSchemaHub.Models.DTO.ColumnDetailsDTO;
 
 namespace SchemaCraftHub.Service
 {
@@ -126,13 +126,13 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<ColumnMetaDataDTO>> GetAllColumnsAsync()
+        public async Task<List<CloumnDTO>> GetAllColumnsAsync()
         {
             try
             {
                 var columns = await _context.ColumnMetaDataEntity.ToListAsync();
 
-                var columnDTOs = columns.Select(column => new ColumnMetaDataDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.CloumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -166,11 +166,11 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<ColumnMetaDataDTO> GetColumnByIdAsync(int id)
+        public async Task<CloumnDTO> GetColumnByIdAsync(int id)
         {
             try
             {
-                var column = await _context.ColumnMetaDataEntity.FirstOrDefaultAsync(x=>x.Id == id);
+                var column = await _context.ColumnMetaDataEntity.FirstOrDefaultAsync(x => x.Id == id);
 
                 if (column == null)
                 {
@@ -178,7 +178,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new ColumnMetaDataDTO
+                var columnDTO = new Model.DTO.CloumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -210,7 +210,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<ColumnMetaDataDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
+        public async Task<CloumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new ColumnMetaDataDTO
+                var columnDTO = new Model.DTO.CloumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -254,7 +254,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<ColumnMetaDataDTO>> GetColumnsByEntityIdAsync(int entityId)
+        public async Task<List<CloumnDTO>> GetColumnsByEntityIdAsync(int entityId)
         {
             try
             {
@@ -262,7 +262,7 @@ namespace SchemaCraftHub.Service
                     .Where(column => column.EntityId == entityId)
                     .ToListAsync();
 
-                var columnDTOs = columns.Select(column => new ColumnMetaDataDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.CloumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -295,8 +295,8 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<Dictionary<string, List<TableDetailsDTO>>> GetClientSchema(ClientSchemaHub.Models.DTO.APIResponse tabledetails1, DBConnectionDTO connectionDTO)
-     {
+        public async Task<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1, DBConnectionDTO connectionDTO)
+        {
             try
             {
                 if (tabledetails1.Result != null)
@@ -304,7 +304,7 @@ namespace SchemaCraftHub.Service
                     try
                     {
                         var jsonString = JsonConvert.SerializeObject(tabledetails1.Result);
-                        var tableDetailsDict = JsonConvert.DeserializeObject<Dictionary<string, List<TableDetailsDTO>>>(jsonString);
+                        var tableDetailsDict = JsonConvert.DeserializeObject<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>>(jsonString);
 
                         foreach (var tabledetailsDTO in tableDetailsDict)
                         {
@@ -330,10 +330,10 @@ namespace SchemaCraftHub.Service
                             foreach (var table in tabledetailsDTO.Value)
                             {
                                 var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
-                                
+
                                 if (table_exists == null)
                                 {
-                                    var columnEntities = new List<ColumnMetaDataDTO>();
+                                    var columnEntities = new List<Model.DTO.CloumnDTO>();
 
                                     foreach (var columnDTO in table.Columns)
                                     {
@@ -343,7 +343,7 @@ namespace SchemaCraftHub.Service
                                         {
                                             ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
                                         }
-                                        var columnEntity = new ColumnMetaDataDTO
+                                        var columnEntity = new Model.DTO.CloumnDTO
                                         {
                                             ColumnName = columnDTO.ColumnName,
                                             Datatype = columnDTO.DataType,
@@ -382,13 +382,12 @@ namespace SchemaCraftHub.Service
             }
         }
 
-
         public async Task<int> CreateTableAsync(TableMetaDataDTO tableDTO)
         {
             try
             {
-               var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.DatabaseName, tableDTO.EntityName);
-               if(tableexists == null)
+                var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.DatabaseName, tableDTO.EntityName);
+                if (tableexists == null)
                 {
                     var table = new TableMetaDataEntity
                     {
@@ -411,7 +410,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task InsertColumnsAsync(List<ColumnMetaDataDTO> columns)
+        public async Task InsertColumnsAsync(List<CloumnDTO> columns)
         {
             try
             {
@@ -449,9 +448,9 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<ClientSchemaHub.Models.DTO.APIResponse> convertandcallcreatetablemodel(DBConnectionDTO connectionDTO, TableRequest tableRequest)
+        public async Task<APIResponse> convertandcallcreatetablemodel(DBConnectionDTO connectionDTO, TableRequest tableRequest)
         {
-            TableDetailsDTO maptable = new TableDetailsDTO
+            ClientSchemaHub.Models.DTO.TableDetailsDTO maptable = new ClientSchemaHub.Models.DTO.TableDetailsDTO
             {
                 TableName = tableRequest.Table.EntityName,
                 Columns = await MapColumns(tableRequest.Columns)
@@ -477,7 +476,7 @@ namespace SchemaCraftHub.Service
                     var responseContent = await response.Content.ReadAsStringAsync();
 
                     // Parse the response content as needed (assuming it's JSON)
-                    var tableDetails = JsonConvert.DeserializeObject<ClientSchemaHub.Models.DTO.APIResponse>(responseContent);
+                    var tableDetails = JsonConvert.DeserializeObject<APIResponse>(responseContent);
 
                     // Continue with your logic...
 
@@ -486,7 +485,7 @@ namespace SchemaCraftHub.Service
                 else
                 {
                     // Handle unsuccessful response
-                    var responseModel = new ClientSchemaHub.Models.DTO.APIResponse
+                    var responseModel = new APIResponse
                     {
                         StatusCode = response.StatusCode,
                         IsSuccess = false,
@@ -499,7 +498,7 @@ namespace SchemaCraftHub.Service
 
         }
 
-         private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnMetaDataDTO> columns)
+        private async Task<List<ColumnDetailsDTO>> MapColumns(List<CloumnDTO> columns)
         {
             var columnDetailsList = new List<ColumnDetailsDTO>();
 
@@ -525,7 +524,7 @@ namespace SchemaCraftHub.Service
             return columnDetailsList;
         }
 
-        private string GenerateCreateTableSql(TableDetailsDTO mapTable)
+        private string GenerateCreateTableSql(ClientSchemaHub.Models.DTO.TableDetailsDTO mapTable)
         {
             StringBuilder sqlBuilder = new StringBuilder();
 
@@ -561,7 +560,7 @@ namespace SchemaCraftHub.Service
             return sqlBuilder.ToString();
         }
 
-        public async Task UpdateColumnsAsync(List<ColumnMetaDataDTO> columns)
+        public async Task UpdateColumnsAsync(List<CloumnDTO> columns)
         {
             try
             {
