@@ -143,8 +143,7 @@ namespace AuthCraftHub.Services
 
         internal async Task<UserDTO?> GetUserAsync(string email)
         {
-            var user = await _context.UserEntity.Include(c => c.Role).FirstOrDefaultAsync(c => c.Email.Trim().ToLower() == email.Trim().ToLower());
-
+            var user = await _context.UserEntity.FirstOrDefaultAsync(c => c.Email.ToLower() == email.ToLower());
 
             if (user == null)
             {
@@ -174,8 +173,11 @@ namespace AuthCraftHub.Services
 
             if (user != null && role != null)
             {
-
-                if (string.IsNullOrEmpty(userTableModelDTO.Password))
+                if (user.Password == userTableModelDTO.Password)
+                {
+                    userTableModelDTO.Password = user.Password;
+                }
+                else if(!string.IsNullOrEmpty(userTableModelDTO.Password))
                 {
                     userTableModelDTO.Password = HashPassword(userTableModelDTO.Password);
                 }
@@ -219,9 +221,9 @@ namespace AuthCraftHub.Services
             }
         }
 
-        internal async Task<RoleDTO> GetRoleById(int id)
+        internal async Task<RoleDTO?> GetRoleById(int id)
         {
-            var role = await _context.RoleEntity.FirstOrDefaultAsync(c => c.Id == id);
+            var role = _context.RoleEntity.FirstOrDefaultAsync(c => c.Id == id).Result;
 
             if (role == null)
             {
