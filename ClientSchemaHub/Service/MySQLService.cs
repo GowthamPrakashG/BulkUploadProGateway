@@ -123,64 +123,66 @@ namespace ClientSchemaHub.Service
 
             const string columnsQuery = @"
     SELECT 
-        column_name AS ColumnName,
-        data_type AS DataType,
-        (
-            SELECT 
-                COUNT(1) > 0
-            FROM 
-                information_schema.key_column_usage kcu
-            WHERE 
-                kcu.constraint_name IN (
-                    SELECT 
-                        tc.constraint_name
-                    FROM 
-                        information_schema.table_constraints tc
-                    WHERE 
-                        tc.table_name = @TableName
-                        AND tc.constraint_type = 'PRIMARY KEY'
-                )
-                AND kcu.table_name = @TableName
-                AND kcu.column_name = c.column_name
-        ) AS IsPrimaryKey,
-        EXISTS (
-            SELECT 1
-            FROM 
-                information_schema.key_column_usage kcu
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-            WHERE 
-                tc.table_name = @TableName
-                AND tc.constraint_type = 'FOREIGN KEY'
-                AND kcu.column_name = c.column_name
-        ) AS HasForeignKey,
-        (
-            SELECT 
-                ccu.table_name
-            FROM 
-                information_schema.key_column_usage kcu
-                JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-            WHERE 
-                tc.table_name = @TableName
-                AND tc.constraint_type = 'FOREIGN KEY'
-                AND kcu.column_name = c.column_name
-        ) AS ReferencedTable,
-        (
-            SELECT 
-                ccu.column_name
-            FROM 
-                information_schema.key_column_usage kcu
-                JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-            WHERE 
-                tc.table_name = @TableName
-                AND tc.constraint_type = 'FOREIGN KEY'
-                AND kcu.column_name = c.column_name
-        ) AS ReferencedColumn
-    FROM 
-        information_schema.columns c
-    WHERE 
-        table_name = @TableName";
+    column_name AS ColumnName,
+    data_type AS DataType,
+    CASE WHEN IS_NULLABLE = 'NO' THEN 0 ELSE 1 END AS IsNullable, -- Convert to boolean
+    (
+        SELECT 
+            COUNT(1) > 0
+        FROM 
+            information_schema.key_column_usage kcu
+        WHERE 
+            kcu.constraint_name IN (
+                SELECT 
+                    tc.constraint_name
+                FROM 
+                    information_schema.table_constraints tc
+                WHERE 
+                    tc.table_name = @TableName
+                    AND tc.constraint_type = 'PRIMARY KEY'
+            )
+            AND kcu.table_name = @TableName
+            AND kcu.column_name = c.column_name
+    ) AS IsPrimaryKey,
+    EXISTS (
+        SELECT 1
+        FROM 
+            information_schema.key_column_usage kcu
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+        WHERE 
+            tc.table_name = @TableName
+            AND tc.constraint_type = 'FOREIGN KEY'
+            AND kcu.column_name = c.column_name
+    ) AS HasForeignKey,
+    (
+        SELECT 
+            ccu.table_name
+        FROM 
+            information_schema.key_column_usage kcu
+            JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+        WHERE 
+            tc.table_name = @TableName
+            AND tc.constraint_type = 'FOREIGN KEY'
+            AND kcu.column_name = c.column_name
+    ) AS ReferencedTable,
+    (
+        SELECT 
+            ccu.column_name
+        FROM 
+            information_schema.key_column_usage kcu
+            JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+        WHERE 
+            tc.table_name = @TableName
+            AND tc.constraint_type = 'FOREIGN KEY'
+            AND kcu.column_name = c.column_name
+    ) AS ReferencedColumn
+FROM 
+    information_schema.columns c
+WHERE 
+    table_name = @TableName";
+
 
             try
             {
