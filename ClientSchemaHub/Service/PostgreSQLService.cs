@@ -124,10 +124,11 @@ namespace ClientSchemaHub.Service
         {
             TableDetailsDTO tableDetails = new TableDetailsDTO { TableName = tableName };
 
-            const string columnsQuery = @"
+            string columnsQuery = @"
     SELECT 
         column_name AS ColumnName,
         data_type AS DataType,
+        CASE WHEN IS_NULLABLE = 'NO' THEN 0 ELSE 1 END AS IsNullable, -- Convert to boolean
         (
             SELECT 
                 COUNT(1) > 0
@@ -184,6 +185,7 @@ namespace ClientSchemaHub.Service
         information_schema.columns c
     WHERE 
         table_name = @TableName";
+
 
             try
             {

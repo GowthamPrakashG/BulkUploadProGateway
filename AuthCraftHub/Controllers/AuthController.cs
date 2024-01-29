@@ -34,7 +34,7 @@ namespace AuthCraftHub.Controllers
                 }
 
                 var userDetailsDTO = await _authService.AuthenticateAsync(model);
-                if (userDetailsDTO.UserName != null || userDetailsDTO.Token != null)
+                if (userDetailsDTO != null)
                 {
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -71,7 +71,8 @@ namespace AuthCraftHub.Controllers
                     return BadRequest(_response);
                 }
 
-                if (_authService.GetUserAsync(userModel.Email) != null)
+                var IsUserExists = await _authService.GetUserAsync(userModel.Email);
+                if (IsUserExists  != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -329,7 +330,7 @@ namespace AuthCraftHub.Controllers
                     return BadRequest(_response);
                 }
 
-                var getRole =  _authService.GetRoleById(roleID);
+                var getRole = _authService.GetRoleById(roleID).Result;
 
                 if (getRole == null)
                 {

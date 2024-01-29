@@ -331,33 +331,72 @@ namespace SchemaCraftHub.Service
                             {
                                 var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
 
-                                if (table_exists == null)
+                                if (table_exists != null)
                                 {
-                                    var columnEntities = new List<Model.DTO.CloumnDTO>();
+                                    var insertcolumnEntities = new List<CloumnDTO>();
+
+                                    var updatecolumnEntities = new List<CloumnDTO>();
 
                                     foreach (var columnDTO in table.Columns)
                                     {
-                                        var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
-                                        Nullable<int> ReferenceEntityID = null;
-                                        if (columnDTO.HasForeignKey)
+                                        var columns = await GetColumnsByEntityIdAsync(table_exists.Id);
+
+                                        var column_exists = columns.FirstOrDefault(x => x.ColumnName.ToLower() == columnDTO.ColumnName.ToLower());
+
+                                        if (column_exists == null)
                                         {
-                                            ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                            Nullable<int> ReferenceEntityID = null;
+                                            if (columnDTO.HasForeignKey)
+                                            {
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                            }
+                                            var columnEntity = new CloumnDTO
+                                            {
+                                                ColumnName = columnDTO.ColumnName,
+                                                Datatype = columnDTO.DataType,
+                                                IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                                IsForeignKey = columnDTO.HasForeignKey,
+                                                EntityId = EntityId,
+                                                ReferenceEntityID = ReferenceEntityID,
+                                                IsNullable = columnDTO.IsNullable,
+                                                // Map other properties from ColumnDetailsDTO as needed
+                                            };
+
+                                            insertcolumnEntities.Add(columnEntity);
                                         }
-                                        var columnEntity = new Model.DTO.CloumnDTO
+                                        else
                                         {
-                                            ColumnName = columnDTO.ColumnName,
-                                            Datatype = columnDTO.DataType,
-                                            IsPrimaryKey = columnDTO.IsPrimaryKey,
-                                            IsForeignKey = columnDTO.HasForeignKey,
-                                            EntityId = EntityId,
-                                            ReferenceEntityID = ReferenceEntityID,
-                                            // Map other properties from ColumnDetailsDTO as needed
-                                        };
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                            Nullable<int> ReferenceEntityID = null;
+                                            if (columnDTO.HasForeignKey)
+                                            {
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                            }
+                                            var columnEntity = new CloumnDTO
+                                            {
+                                                Id = column_exists.Id,
+                                                ColumnName = columnDTO.ColumnName,
+                                                Datatype = columnDTO.DataType,
+                                                IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                                IsForeignKey = columnDTO.HasForeignKey,
+                                                EntityId = EntityId,
+                                                ReferenceEntityID = ReferenceEntityID,
+                                                IsNullable = columnDTO.IsNullable,
+                                                // Map other properties from ColumnDetailsDTO as needed
+                                            };
 
-                                        columnEntities.Add(columnEntity);
+                                            updatecolumnEntities.Add(columnEntity);
+                                        }
                                     }
-
-                                    await InsertColumnsAsync(columnEntities);
+                                    if(insertcolumnEntities.Count > 0)
+                                    {
+                                        await InsertColumnsAsync(insertcolumnEntities);
+                                    }
+                                    if(updatecolumnEntities.Count > 0)
+                                    {
+                                        await UpdateColumnsAsync(updatecolumnEntities);
+                                    }
                                 }
                             }
                         }
@@ -512,6 +551,7 @@ namespace SchemaCraftHub.Service
                     ColumnName = column.ColumnName,
                     DataType = column.Datatype,
                     IsPrimaryKey = column.IsPrimaryKey,
+                    IsNullable = column.IsNullable,
                     HasForeignKey = column.IsForeignKey,
                     ReferencedTable = referencedTable?.EntityName,
                     ReferencedColumn = referencedColumn?.ColumnName
@@ -571,25 +611,25 @@ namespace SchemaCraftHub.Service
                     if (existingColumnEntity != null)
                     {
                         // Update the properties of the existing entity
-                        existingColumnEntity.ColumnName = columnDTO.ColumnName;
-                        existingColumnEntity.Datatype = columnDTO.Datatype;
+                        existingColumnEntity.ColumnName = string.IsNullOrEmpty(columnDTO.ColumnName) ? existingColumnEntity.ColumnName : columnDTO.ColumnName;
+                        existingColumnEntity.Datatype = string.IsNullOrEmpty(columnDTO.Datatype) ? existingColumnEntity.Datatype : columnDTO.Datatype;
                         existingColumnEntity.IsPrimaryKey = columnDTO.IsPrimaryKey;
                         existingColumnEntity.IsForeignKey = columnDTO.IsForeignKey;
                         existingColumnEntity.EntityId = columnDTO.EntityId;
                         existingColumnEntity.ReferenceEntityID = columnDTO.ReferenceEntityID;
                         existingColumnEntity.ReferenceColumnID = columnDTO.ReferenceColumnID;
-                        existingColumnEntity.Length = columnDTO.Length;
-                        existingColumnEntity.MinLength = columnDTO.MinLength;
-                        existingColumnEntity.MaxLength = columnDTO.MaxLength;
-                        existingColumnEntity.MaxRange = columnDTO.MaxRange;
-                        existingColumnEntity.MinRange = columnDTO.MinRange;
-                        existingColumnEntity.DateMinValue = columnDTO.DateMinValue;
-                        existingColumnEntity.DateMaxValue = columnDTO.DateMaxValue;
-                        existingColumnEntity.Description = columnDTO.Description;
+                        existingColumnEntity.Length = columnDTO.Length ?? existingColumnEntity.Length;
+                        existingColumnEntity.MinLength = columnDTO.MinLength ?? existingColumnEntity.MinLength;
+                        existingColumnEntity.MaxLength = columnDTO.MaxLength ?? existingColumnEntity.MaxLength;
+                        existingColumnEntity.MaxRange = columnDTO.MaxRange ?? existingColumnEntity.MaxRange;
+                        existingColumnEntity.MinRange = columnDTO.MinRange ?? existingColumnEntity.MinRange;
+                        existingColumnEntity.DateMinValue = string.IsNullOrEmpty(columnDTO.DateMinValue) ? existingColumnEntity.DateMinValue : columnDTO.DateMinValue;
+                        existingColumnEntity.DateMaxValue = string.IsNullOrEmpty(columnDTO.DateMaxValue) ? existingColumnEntity.DateMaxValue : columnDTO.DateMaxValue;
+                        existingColumnEntity.Description = string.IsNullOrEmpty(columnDTO.Description) ? existingColumnEntity.Description : columnDTO.Description;
                         existingColumnEntity.IsNullable = columnDTO.IsNullable;
-                        existingColumnEntity.DefaultValue = columnDTO.DefaultValue;
-                        existingColumnEntity.True = columnDTO.True;
-                        existingColumnEntity.False = columnDTO.False;
+                        existingColumnEntity.DefaultValue = string.IsNullOrEmpty(columnDTO.DefaultValue) ? existingColumnEntity.DefaultValue : columnDTO.DefaultValue;
+                        existingColumnEntity.True = string.IsNullOrEmpty(columnDTO.True) ? existingColumnEntity.True : columnDTO.True;
+                        existingColumnEntity.False = string.IsNullOrEmpty(columnDTO.False) ? existingColumnEntity.False : columnDTO.False;
 
                         // Update other properties as needed
 
@@ -602,13 +642,14 @@ namespace SchemaCraftHub.Service
                     }
                 }
 
-                _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Use await to ensure the asynchronous operation is completed
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("An error occurred while updating columns.", ex);
             }
         }
+
 
     }
 }
