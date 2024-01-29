@@ -45,11 +45,9 @@ namespace DBUtilityHub.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("DateMaxValue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("DateMinValue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("DefaultValue")
@@ -193,17 +191,7 @@ namespace DBUtilityHub.Migrations
                         new
                         {
                             Id = 1,
-                            RoleName = "Admin"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            RoleName = "Developer"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            RoleName = "Tester"
+                            RoleName = "Super Admin"
                         });
                 });
 
@@ -299,6 +287,8 @@ namespace DBUtilityHub.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("UserEntity");
 
                     b.HasData(
@@ -306,17 +296,17 @@ namespace DBUtilityHub.Migrations
                         {
                             Id = 1,
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6205),
+                            CreatedDate = new DateTime(2024, 1, 23, 5, 19, 31, 661, DateTimeKind.Utc).AddTicks(8166),
                             DOB = new DateOnly(1, 1, 1),
-                            Email = "superuser@datayaan.com",
+                            Email = "superadminuser@datayaan.com",
                             Gender = "",
-                            Name = "SuperUser",
-                            Password = "AQAAAAIAAYagAAAAEFUwAGdRht/x8RmJmb5mMyb9u/acQMHafPJk3Vd1DvumKRIMpk0WGGulJr4uInTBLA==",
-                            Phonenumber = "9876543210",
+                            Name = "Super Admin User",
+                            Password = "AQAAAAIAAYagAAAAEAc+6Aora2fEODovzekGuoRV9mNHh7WnwktumGbInTcvo/6FBH/uPJcEeMsSBmLPNg==",
+                            Phonenumber = "",
                             RoleId = 1,
                             Status = true,
                             UpdatedBy = 0,
-                            UpdatedDate = new DateTime(2024, 1, 3, 7, 35, 56, 15, DateTimeKind.Utc).AddTicks(6211)
+                            UpdatedDate = new DateTime(2024, 1, 23, 5, 19, 31, 661, DateTimeKind.Utc).AddTicks(8171)
                         });
                 });
 
@@ -329,6 +319,17 @@ namespace DBUtilityHub.Migrations
                         .IsRequired();
 
                     b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("DBUtilityHub.Models.UserEntity", b =>
+                {
+                    b.HasOne("DBUtilityHub.Models.RoleEntity", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 #pragma warning restore 612, 618
         }

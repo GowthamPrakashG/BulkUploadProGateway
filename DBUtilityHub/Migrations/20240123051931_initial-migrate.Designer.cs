@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DBUtilityHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240105073618_intial1d2")]
-    partial class intial1d2
+    [Migration("20240123051931_initial-migrate")]
+    partial class initialmigrate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,11 +48,9 @@ namespace DBUtilityHub.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("DateMaxValue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("DateMinValue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("DefaultValue")
@@ -191,6 +189,13 @@ namespace DBUtilityHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RoleEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            RoleName = "Super Admin"
+                        });
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.TableMetaDataEntity", b =>
@@ -285,7 +290,27 @@ namespace DBUtilityHub.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("UserEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = 0,
+                            CreatedDate = new DateTime(2024, 1, 23, 5, 19, 31, 661, DateTimeKind.Utc).AddTicks(8166),
+                            DOB = new DateOnly(1, 1, 1),
+                            Email = "superadminuser@datayaan.com",
+                            Gender = "",
+                            Name = "Super Admin User",
+                            Password = "AQAAAAIAAYagAAAAEAc+6Aora2fEODovzekGuoRV9mNHh7WnwktumGbInTcvo/6FBH/uPJcEeMsSBmLPNg==",
+                            Phonenumber = "",
+                            RoleId = 1,
+                            Status = true,
+                            UpdatedBy = 0,
+                            UpdatedDate = new DateTime(2024, 1, 23, 5, 19, 31, 661, DateTimeKind.Utc).AddTicks(8171)
+                        });
                 });
 
             modelBuilder.Entity("DBUtilityHub.Models.LogChild", b =>
@@ -297,6 +322,17 @@ namespace DBUtilityHub.Migrations
                         .IsRequired();
 
                     b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("DBUtilityHub.Models.UserEntity", b =>
+                {
+                    b.HasOne("DBUtilityHub.Models.RoleEntity", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 #pragma warning restore 612, 618
         }
