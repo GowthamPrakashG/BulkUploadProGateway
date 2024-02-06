@@ -1,5 +1,6 @@
 using ClientSchemaHub.Service;
 using ClientSchemaHub.Service.IService;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,16 @@ builder.Services.AddScoped<IPostgreSQLService, PostgreSQLService>();
 builder.Services.AddScoped<IMySQLService, MySQLService>();
 builder.Services.AddScoped<IGeneralDatabaseService, GeneralDatabaseService>();
 
+builder.Services.AddCors(c =>
+{
+    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyMethod()
+     .AllowAnyHeader());
+});
+
+
 var app = builder.Build();
+
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

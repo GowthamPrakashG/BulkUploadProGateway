@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
+using SchemaCraftHub.Service;
 using SchemaCraftHub.Service.IService;
 
 namespace SchemaCraftHub.Controllers
@@ -11,10 +12,12 @@ namespace SchemaCraftHub.Controllers
     public class EntitySchemaController : ControllerBase
     {
         private readonly IEntitySchemaService _entitySchemaService;
+        private readonly ILogService _logService; // Inject the LogService
 
-        public EntitySchemaController(IEntitySchemaService entitySchemaService)
+        public EntitySchemaController(IEntitySchemaService entitySchemaService, ILogService logService)
         {
             _entitySchemaService = entitySchemaService;
+            _logService = logService;
         }
 
         [HttpGet("tables")]
@@ -305,7 +308,7 @@ namespace SchemaCraftHub.Controllers
         }
 
 
-        [HttpPost("cliententity")]
+        [HttpGet("cliententity")]
         public async Task<IActionResult> ClientEntity([FromQuery] DBConnectionDTO connectionDTO)
         {
             try
@@ -386,18 +389,19 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpPost("updatetables")]
-        public async Task<IActionResult> UpdateTable([FromBody]List<CloumnDTO> columns)
+        public async Task<IActionResult> UpdateTable([FromBody] List<ColumnDTO> columns)
         {
             try
             {
-                var updatetable = _entitySchemaService.UpdateColumnsAsync(columns);
+                await _entitySchemaService.UpdateColumnsAsync(columns);
 
                 var responseModel = new APIResponse
                 {
-                    StatusCode = HttpStatusCode.Created,
+                    StatusCode = HttpStatusCode.OK,
                     IsSuccess = true,
-                    Result = updatetable
+                    Result = null  // You can assign a meaningful result here if needed
                 };
+
                 return Ok(responseModel);
             }
             catch (Exception ex)
@@ -409,6 +413,203 @@ namespace SchemaCraftHub.Controllers
                     ErrorMessages = new List<string> { ex.Message },
                     Result = null
                 };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+
+
+        [HttpGet("columns/{hostName}/{provider}/{databaseName}/{tableName}")]
+        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName)
+        {
+            try
+            {
+                var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName);
+                if (table == null)
+                {
+                    return NotFound();
+                }
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = table
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("log/{logParentId}")]
+        public async Task<IActionResult> GetLogByParentId(int logParentId)
+        {
+            try
+            {
+                var logDTO = await _logService.GetLogByParentIdAsync(logParentId);
+
+                if (logDTO == null)
+                {
+                    return NotFound(); // or handle the case where log with the specified ID is not found
+                }
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = logDTO
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("log/child/{logChildId}")]
+        public async Task<IActionResult> GetLogByChildId(int logChildId)
+        {
+            try
+            {
+                var logDTO = await _logService.GetLogByChildIdAsync(logChildId);
+
+                if (logDTO == null)
+                {
+                    return NotFound(); // or handle the case where log with the specified child ID is not found
+                }
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = logDTO
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("logs")]
+        public async Task<IActionResult> GetAllLogs()
+        {
+            try
+            {
+                var logDTOs = await _logService.GetAllLogsAsync();
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = logDTOs
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("logs/user/{userId}")]
+        public async Task<IActionResult> GetLogsByUserId(int userId)
+        {
+            try
+            {
+                var logDTOs = await _logService.GetLogsByUserIdAsync(userId);
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = logDTOs
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
+        [HttpGet("logs/entity/{entityId}")]
+        public async Task<IActionResult> GetLogsByEntityId(int entityId)
+        {
+            try
+            {
+                var logDTOs = await _logService.GetLogsByEntityIdAsync(entityId);
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = logDTOs
+                };
+
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = null
+                };
+
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }

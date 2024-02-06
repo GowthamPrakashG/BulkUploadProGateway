@@ -115,7 +115,7 @@ namespace ClientSchemaHub.Service
             }
         }
 
-        public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>> convertedDataList, List<ColumnMetaDataDTO> booleancolumns, string tablename)
+        public async Task<bool> InsertdataGeneral(DBConnectionDTO? connectionDTO, List<Dictionary<string, string>>? convertedDataList, List<ColumnMetaDataDTO>? booleancolumns, string? tablename)
         {
             try
             {

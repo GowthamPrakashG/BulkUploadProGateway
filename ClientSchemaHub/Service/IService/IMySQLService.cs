@@ -9,7 +9,7 @@ namespace ClientSchemaHub.Service.IService
 
         public Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO dBConnection, string tableName);
 
-        public Task<List<dynamic>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName);
+        public Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName);
 
         public Task<bool> ConvertAndCallCreateTableModel(DBConnectionDTO connectionDTO, string createQuery);
     }

@@ -206,7 +206,7 @@ namespace ClientSchemaHub.Service
 
 
         // Get PrimaryKey rescords from the specific table
-        public async Task<List<dynamic>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
+        public async Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
         {
             try
             {
@@ -226,12 +226,12 @@ namespace ClientSchemaHub.Service
 
                     // Query to get the primary key column name
                     string primaryKeyQuery = $@"
-                SELECT column_name
-                FROM information_schema.table_constraints tc
-                JOIN information_schema.key_column_usage kcu
-                ON tc.constraint_name = kcu.constraint_name
-                WHERE constraint_type = 'PRIMARY KEY'
-                AND kcu.table_name = '{tableName}'";
+            SELECT column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name = kcu.constraint_name
+            WHERE constraint_type = 'PRIMARY KEY'
+            AND kcu.table_name = '{tableName}'";
 
                     string primaryKeyColumnName = await connection.QueryFirstOrDefaultAsync<string>(primaryKeyQuery);
 
@@ -239,7 +239,18 @@ namespace ClientSchemaHub.Service
                     if (!string.IsNullOrEmpty(primaryKeyColumnName))
                     {
                         string query = $"SELECT {primaryKeyColumnName} FROM {tableName}";
-                        return (await connection.QueryAsync(query)).ToList();
+
+                        // Fetch the list of objects
+                        var results = await connection.QueryAsync<dynamic>(query);
+
+                        // Extract the values and return as a list of objects
+                        var idList = results.Select(result =>
+                        {
+                            var dictionary = (IDictionary<string, object>)result;
+                            return dictionary[primaryKeyColumnName];
+                        }).ToList();
+
+                        return idList;
                     }
                     else
                     {
@@ -252,6 +263,7 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
+
 
 
         //create Table
@@ -296,7 +308,7 @@ namespace ClientSchemaHub.Service
         }
 
         //Insert data
-        public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>> convertedDataList, List<ColumnMetaDataDTO> booleancolumns, string tablename)
+        public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>>? convertedDataList, List<ColumnMetaDataDTO>? booleancolumns, string tablename)
         {
             List<Dictionary<string, string>> dataToRemove = new List<Dictionary<string, string>>();
 
@@ -308,9 +320,22 @@ namespace ClientSchemaHub.Service
                     {
                         // Update the value for the specific key
                         var value = data2[boolvalue.ColumnName];
-                        if (value.ToLower() == boolvalue.True.ToLower())
+                        if (!string.IsNullOrEmpty(value))
                         {
-                            data2[boolvalue.ColumnName] = "1";
+                            if (value != "0")
+                            {
+                                if (value != "1")
+                                {
+                                    if (value.ToLower() == boolvalue.True.ToLower())
+                                    {
+                                        data2[boolvalue.ColumnName] = "1";
+                                    }
+                                    else
+                                    {
+                                        data2[boolvalue.ColumnName] = "0";
+                                    }
+                                }
+                            }
                         }
                         else
                         {
@@ -320,7 +345,7 @@ namespace ClientSchemaHub.Service
                 }
                 try
                 {
-                    string connectionString = BuildConnectionString(connectionDTO);
+                    string connectionString = BuildConnectionString(connectionDTO) + ";Include Error Detail=true";
 
                     using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
                     {

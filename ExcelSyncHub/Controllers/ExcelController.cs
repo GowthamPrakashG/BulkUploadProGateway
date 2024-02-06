@@ -28,8 +28,8 @@ namespace ExcelSyncHub.Controllers
             _response = new();
             _context = context;
         }
+
         [HttpPost("generate")]
-        [EnableCors("AllowAngularDev")]
         public IActionResult GenerateExcelFile([FromBody] List<ColumnMetaDataDTO> columns,int? logId)
         {
             try
@@ -58,7 +58,6 @@ namespace ExcelSyncHub.Controllers
         }
 
         [HttpPost("upload")]
-        [EnableCors("AllowAngularDev")]
         public async Task<IActionResult> UploadFile(IFormFile file, [FromQuery] DBConnectionDTO connectionDto,string tableName)
         {
             List<string> errorMessages = new List<string>();
@@ -167,6 +166,8 @@ namespace ExcelSyncHub.Controllers
 
                     //DataTypeValidationResult dataTypeValidationResult = _excelService.ValidateDataTypes(validationResult, columnsDTO);
 
+                    //Primary Kye Validation
+
                     validationResultData = await _excelService.ValidatePrimaryKeyAsync(validationResult, columnsDTO, tableName,connectionDto);
 
                     if (validationResultData.BadRows.Count > 0)
@@ -183,7 +184,7 @@ namespace ExcelSyncHub.Controllers
 
                     //Range Validation
 
-                    validationResultData = await _excelService.ValidateRange(validationResult, columnsDTO, tableName);
+                    validationResultData = await _excelService.ValidateRange(validationResultData, columnsDTO, tableName);
 
                     if (validationResultData.BadRows.Count > 0)
                     {
@@ -197,6 +198,19 @@ namespace ExcelSyncHub.Controllers
                         }
                     }
 
+                    validationResultData = await _excelService.ValidateLength(validationResultData, columnsDTO, tableName);
+
+                    if (validationResultData.BadRows.Count > 0)
+                    {
+                        var resultparams = await _excelService.resultparamsforlength(validationResultData, comma_separated_string, tableName);
+
+                        if (resultparams != null)
+                        {
+                            filedatas.Add(resultparams.Filedatas);
+                            errorMessages.Add(resultparams.errorMessages);
+                            ErrorRowNumber.Add(resultparams.ErrorRowNumber);
+                        }
+                    }
 
                 }
 
@@ -206,7 +220,7 @@ namespace ExcelSyncHub.Controllers
                 _excelService.InsertDataFromDataTableToPostgreSQL(validationResultData.SuccessData, tableName, columns, file, connectionDto);
                 if (validationResultData.SuccessData.Rows.Count == 0)
                 {
-                    _response.Result = result;
+                    _response.Result = result.LogParentDTOs.ID;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessage.Add("All Records are incorrect");
@@ -214,7 +228,7 @@ namespace ExcelSyncHub.Controllers
                 }
                 else if (filedatas.Count == 0)
                 {
-                    _response.Result = result;
+                    _response.Result = result.LogParentDTOs.ID;
                     _response.StatusCode = HttpStatusCode.Created;
                     _response.IsSuccess = true;
                     _response.ErrorMessage.Add("All records are successfully stored");
@@ -222,7 +236,7 @@ namespace ExcelSyncHub.Controllers
                 }
                 else
                 {
-                    _response.Result = result;
+                    _response.Result = result.LogParentDTOs.ID;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = true;
                     _response.ErrorMessage.Add("Passcount records are successfully stored failcount records are incorrect ");

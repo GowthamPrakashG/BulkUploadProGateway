@@ -10,6 +10,8 @@ using OfficeOpenXml;
 using ExcelSyncHub.Models.DTO;
 using Newtonsoft.Json;
 using ExcelSyncHub.Service.IService;
+using Spire.Xls.Core;
+using System.Net;
 
 namespace ExcelSyncHub.Service
 {
@@ -36,7 +38,6 @@ namespace ExcelSyncHub.Service
 
             // Set protection options for the first sheet (read-only)
             worksheet.Protect("your_password", SheetProtectionType.All);
-            worksheet.Protect("your_password", SheetProtectionType.None);
             worksheet.DefaultRowHeight = 15;
             var headerColor = worksheet.Range["A2:O2"];
             headerColor.Style.FillPattern = ExcelPatternType.Solid;
@@ -63,107 +64,43 @@ namespace ExcelSyncHub.Service
             worksheet.Range["O2"].Text = "Option2";
 
             // Populate the first sheet with column details
-            for (int i = 0; i < columns.Count; i++)
+            columns.ForEach(column =>
             {
-                var column = columns[i];
-                int row = i + 3; // Adjust the row index to start from 3
+                int i = columns.IndexOf(column); // Get the index of the current column
+                int row = i + 3;
+                var range = worksheet.Range[row, 1, row, 15];
+                range.Style.Color = (row % 2 == 0) ? Color.LightBlue : Color.Azure;
 
-                if (row % 2 == 0)
-                {
-                    worksheet.Range[row, 1, row, 15].Style.Color = Color.LightBlue; // Set even row color
-                }
-                else
-                {
-                    worksheet.Range[row, 1, row, 15].Style.Color = Color.Azure; // Set odd row color
-                }
-                worksheet.Range[i + 3, 1].Value = (i + 1).ToString();
-                worksheet.Range[i + 3, 2].Text = column.ColumnName;
-                worksheet.Range[i + 3, 3].Text = column.Datatype;
-                if (column.MinLength == null || column.MinLength == 0)
-                {
-                    worksheet.Range[i + 3, 4].Text = string.Empty;
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 4].Text = column.MinLength.ToString();
-                }
-                if (column.MaxLength == 0)
-                {
-                    worksheet.Range[i + 3, 5].Text = string.Empty;
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 5].Text = column.MaxLength.ToString();
-                }
-                if (column.MinRange == null || column.MinRange == 0)
-                {
-                    worksheet.Range[i + 3, 6].Text = string.Empty;
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 6].Text = column.MinRange.ToString();
-                }
-                if (column.MaxRange == 0)
-                {
-                    worksheet.Range[i + 3, 7].Text = string.Empty;
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 7].Text = column.MaxRange.ToString();
-                }
-                if (string.IsNullOrEmpty(column.DateMinValue) && string.IsNullOrEmpty(column.DateMaxValue))
-                {
-                    worksheet.Range[i + 3, 8].Text = string.Empty;
-                    worksheet.Range[i + 3, 9].Text = string.Empty;
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 8].Text = column.DateMinValue;
-                    worksheet.Range[i + 3, 9].Text = column.DateMaxValue;
-                }
-                worksheet.Range[i + 3, 9].Text = column.DateMaxValue.ToString();
-                worksheet.Range[i + 3, 10].Text = column.Description;
+                SetCellText(worksheet, i + 3, 1, (i + 1).ToString());
+                SetCellText(worksheet, i + 3, 2, column.ColumnName);
+                SetCellText(worksheet, i + 3, 3, column.Datatype);
+                SetCellText(worksheet, i + 3, 4, column.MinLength?.ToString() ?? string.Empty);
+                SetCellText(worksheet, i + 3, 5, (column.MaxLength > 0) ? column.MaxLength.ToString() : string.Empty);
+                SetCellText(worksheet, i + 3, 6, column.MinRange?.ToString() ?? string.Empty);
+                SetCellText(worksheet, i + 3, 7, (column.MaxRange > 0) ? column.MaxRange.ToString() : string.Empty);
+                SetCellText(worksheet, i + 3, 8, column.DateMinValue ?? string.Empty);
+                SetCellText(worksheet, i + 3, 9, column.DateMaxValue ?? string.Empty);
+                SetCellText(worksheet, i + 3, 10, column.Description ?? string.Empty);
                 worksheet.Range[i + 3, 11].Text = column.IsNullable.ToString();
-
-                if (column.Datatype.ToLower() == "boolean")
-                {
-                    if (column.DefaultValue.ToLower() == "true")
-                    {
-                        worksheet.Range[i + 3, 12].Text = column.True;
-                    }
-                    else if (column.DefaultValue.ToLower() == "false")
-                    {
-                        worksheet.Range[i + 3, 12].Text = column.False;
-                    }
-                }
-                else
-                {
-                    worksheet.Range[i + 3, 12].Text = column.DefaultValue.ToString();
-                }
-
+                SetCellText(worksheet, i + 3, 12, (column.Datatype.ToLower() == "boolean") ? (string.IsNullOrEmpty(column.DefaultValue) ? string.Empty : ((column.DefaultValue.ToLower() == "true") ? column.True : column.False)) : column.DefaultValue);
                 worksheet.Range[i + 3, 13].Text = column.IsPrimaryKey.ToString();
-                worksheet.Range[i + 3, 14].Text = column.True.ToString();
-                worksheet.Range[i + 3, 15].Text = column.False.ToString();
+                SetCellText(worksheet, i + 3, 14, column.True ?? string.Empty);
+                SetCellText(worksheet, i + 3, 15, column.False ?? string.Empty);
 
-                int lastRowIndex1 = worksheet.Rows.Length;
+                worksheet.Range["A1"].Text = column.EntityId.ToString();
+            });
 
-                int entityId = column.EntityId;
-                worksheet.Range["A1"].Text = entityId.ToString();
-            }
             worksheet.HideRow(1);
 
             // Add static content in the last row (vertically)
             var lastRowIndex = worksheet.Rows.Length;
-            for (int i = lastRowIndex + 2; i <= lastRowIndex + 7; i++)
+            int startRow = lastRowIndex + 2;
+            int endRow = startRow + 7;
+
+            for (int i = startRow; i < endRow; i += 2)
             {
-                if (i % 2 == 0)
-                {
-                    worksheet.Range[i, 1, i, 5].Style.Color = Color.LightGray; // Set even row color
-                }
-                else
-                {
-                    worksheet.Range[i, 1, i, 5].Style.Color = Color.LightSkyBlue; // Set odd row color
-                }
+                Color rowColor = (i % 4 == 0) ? Color.LightGray : Color.LightSkyBlue;
+                worksheet.Range[i, 1, i, 5].Style.Color = rowColor;
             }
             worksheet.Range[lastRowIndex + 2, 1].Text = "";
             worksheet.Range[lastRowIndex + 3, 1].Text = "Note:";
@@ -221,6 +158,7 @@ namespace ExcelSyncHub.Service
                     workbook.Worksheets.Remove(sheetToRemove);
                 }
             }
+
             AddDataValidation(columnNamesWorksheet, columns, parentId);
 
 
@@ -229,6 +167,12 @@ namespace ExcelSyncHub.Service
                 workbook.SaveToStream(memoryStream, FileFormat.Version2013);
                 return memoryStream.ToArray();
             }
+        }
+
+        // Helper method to set cell text
+        private static void SetCellText(IWorksheet worksheet, int row, int col, string value)
+        {
+            worksheet.Range[row, col].Text = string.IsNullOrEmpty(value) ? string.Empty : value;
         }
 
         //HighLight Formula
@@ -252,32 +196,24 @@ namespace ExcelSyncHub.Service
             {
                 int columnCount = columnNamesWorksheet.Columns.Length - 2;
                 char letter = 'A';
-                char lastletter = 'A';
+                char lastletter = (char)('A' + columnCount - 1);
                 // Protect the worksheet with a password
                 columnNamesWorksheet.Protect("password");
-                for (int i = 2; i <= columnCount; i++)
-                {
-                    lastletter++;
-                }
+
                 for (int col = 1; col <= columnCount; col++)
                 {
-                    // Get the data type for the current column
-                    string dataType = columns[col - 1].Datatype;
-                    int length = (int)columns[col - 1].Length;
-                    bool isPrimaryKey = columns[col - 1].IsPrimaryKey;
-                    string truevalue = columns[col - 1].True;
-                    string falsevalue = columns[col - 1].False;
-                    bool isNullable = columns[col - 1].IsNullable;
-                    int? nullableMinRange = columns[col - 1].MinRange;
-                    int? nullableMaxRange = columns[col - 1].MaxRange;
-                    int minRange = nullableMinRange.HasValue ? nullableMinRange.Value : 0; // Use 0 as a default value when MinLength is null
-                    int maxRange = nullableMaxRange.HasValue ? nullableMaxRange.Value : 0; // Use 0 as a default value when MaxLength is null
-                    int? nullableMinLength = columns[col - 1].MinLength;
-                    int? nullableMaxLength = columns[col - 1].MaxLength;
-                    int minLength = nullableMinLength.HasValue ? nullableMinLength.Value : 0; // Use 0 as a default value when MinLength is null
-                    int maxLength = nullableMaxLength.HasValue ? nullableMaxLength.Value : 0; // Use 0 as a default value when MaxLength is null
-                    string dateMinValue = columns[col - 1].DateMinValue;
-                    string dateMaxValue = columns[col - 1].DateMaxValue;
+                    string dataType = columns[col - 1]?.Datatype ?? string.Empty;
+                    int length = columns[col - 1]?.Length ?? 0;
+                    bool isPrimaryKey = columns[col - 1]?.IsPrimaryKey ?? false;
+                    string truevalue = columns[col - 1]?.True ?? string.Empty;
+                    string falsevalue = columns[col - 1]?.False ?? string.Empty;
+                    bool isNullable = columns[col - 1]?.IsNullable ?? false;
+                    int minRange = columns[col - 1]?.MinRange ?? 0;
+                    int maxRange = columns[col - 1]?.MaxRange ?? 0;
+                    int minLength = columns[col - 1]?.MinLength ?? 0;
+                    int maxLength = columns[col - 1]?.MaxLength ?? 0;
+                    string dateMinValue = columns[col - 1]?.DateMinValue ?? string.Empty;
+                    string dateMaxValue = columns[col - 1]?.DateMaxValue ?? string.Empty;
 
                     // Specify the range for data validation
                     CellRange range = columnNamesWorksheet.Range[startRow, col, endRow, col];
@@ -285,10 +221,10 @@ namespace ExcelSyncHub.Service
 
 
                     //Protect the worksheet with password
-                    columnNamesWorksheet.Protect("123456", SheetProtectionType.All);
-                    List<string> integerTypes = new List<string> { "int", "integer", "number", "numeric", /* add more as needed */ };
+                    //columnNamesWorksheet.Protect("123456", SheetProtectionType.All);
+                    List<string> integerTypes = new List<string> { "int", "integer", "number", "numeric", "smallint" /* add more as needed */ };
                     List<string> stringTypes = new List<string> { "string", "varchar", "nvarchar", "text", "character varying"/* add more as needed */ };
-                    List<string> timestampTypes = new List<string> { "timestamp", "datetime", "timestamp without time zone", "date" /* add more as needed */ };
+                    List<string> timestampTypes = new List<string> { "timestamp", "datetime", "timestamp without time zone", "date", "timestamp with time zone" /* add more as needed */ };
 
 
 
@@ -543,42 +479,35 @@ namespace ExcelSyncHub.Service
             {
                 int columnCount = columnNamesWorksheet.Columns.Length;
                 char letter = 'A';
-                char lastletter = 'A';
+                char lastletter = (char)('A' + columnCount - 1);
                 // Protect the worksheet with a password
                 columnNamesWorksheet.Protect("password");
-                for (int i = 2; i <= columnCount; i++)
-                {
-                    lastletter++;
-                }
 
                 for (int col = 1; col <= columnCount; col++)
                 {
                     // Get the data type for the current column
-                    string dataType = columns[col - 1].Datatype;
-                    int length = (int)columns[col - 1].Length;
-                    bool isPrimaryKey = columns[col - 1].IsPrimaryKey;
-                    string truevalue = columns[col - 1].True;
-                    string falsevalue = columns[col - 1].False;
-                    bool isNullable = columns[col - 1].IsNullable;
-                    int? nullableMinRange = columns[col - 1].MinRange;
-                    int? nullableMaxRange = columns[col - 1].MaxRange;
-                    int minRange = nullableMinRange.HasValue ? nullableMinRange.Value : 0; // Use 0 as a default value when MinLength is null
-                    int maxRange = nullableMaxRange.HasValue ? nullableMaxRange.Value : 0; // Use 0 as a default value when MaxLength is null
-                    int? nullableMinLength = columns[col - 1].MinLength;
-                    int? nullableMaxLength = columns[col - 1].MaxLength;
-                    int minLength = nullableMinLength.HasValue ? nullableMinLength.Value : 0; // Use 0 as a default value when MinLength is null
-                    int maxLength = nullableMaxLength.HasValue ? nullableMaxLength.Value : 0; // Use 0 as a default value when MaxLength is null
-                    string dateMinValue = columns[col - 1].DateMinValue;
-                    string dateMaxValue = columns[col - 1].DateMaxValue;
+                    string dataType = columns[col - 1]?.Datatype ?? string.Empty;
+                    int length = columns[col - 1]?.Length ?? 0;
+                    bool isPrimaryKey = columns[col - 1]?.IsPrimaryKey ?? false;
+                    string truevalue = columns[col - 1]?.True ?? string.Empty;
+                    string falsevalue = columns[col - 1]?.False ?? string.Empty;
+                    bool isNullable = columns[col - 1]?.IsNullable ?? false;
+                    int minRange = columns[col - 1]?.MinRange ?? 0;
+                    int maxRange = columns[col - 1]?.MaxRange ?? 0;
+                    int minLength = columns[col - 1]?.MinLength ?? 0;
+                    int maxLength = columns[col - 1]?.MaxLength ?? 0;
+                    string dateMinValue = columns[col - 1]?.DateMinValue ?? string.Empty;
+                    string dateMaxValue = columns[col - 1]?.DateMaxValue ?? string.Empty;
+
                     // Specify the range for data validation
                     CellRange range = columnNamesWorksheet.Range[startRow, col, endRow, col];
                     Validation validation = range.DataValidation;
-                    //Protect the worksheet with password
-                    columnNamesWorksheet.Protect("123456", SheetProtectionType.All);
+                    ////Protect the worksheet with password
+                    //columnNamesWorksheet.Protect("123456", SheetProtectionType.All);
                     // Check if the current column has a data type of "ListOfValues"
-                    List<string> integerTypes = new List<string> { "int", "integer", "number", "numeric", /* add more as needed */ };
+                    List<string> integerTypes = new List<string> { "int", "integer", "number", "numeric", "smallint" /* add more as needed */ };
                     List<string> stringTypes = new List<string> { "string", "varchar", "nvarchar", "text", "character varying"/* add more as needed */ };
-                    List<string> timestampTypes = new List<string> { "timestamp", "datetime", "timestamp without time zone", "date" /* add more as needed */ };
+                    List<string> timestampTypes = new List<string> { "timestamp", "datetime", "timestamp without time zone", "date" , "timestamp with time zone" /* add more as needed */ };
 
                     if (stringTypes.Contains(dataType, StringComparer.OrdinalIgnoreCase))
                     {
@@ -851,18 +780,20 @@ namespace ExcelSyncHub.Service
             {
                 var logChilds = await GetAllLogChildsByParentIDAsync(parentId.Value);
                 int rowIndex = 3;
-                foreach (var logChild in logChilds)
-                {
-                    string[] rows = logChild.Filedata.Split(';');
 
-                    string errorMessage = logChild.ErrorMessage;
-                    string errorrowNumber = logChild.ErrorRowNumber;
 
                     // Set the column name as "ErrorMessage" for the last column after processing all rows
                     columnNamesWorksheet.Range[rowIndex - 1, columns.Count + 1].Text = "ErrorMessage";
                     columnNamesWorksheet.Range[rowIndex - 1, columns.Count + 2].Text = "ErrorRowNumber";
-                    // Split ErrorRowNumber into individual values
+
+                foreach (var logChild in logChilds)
+                {
+                    string errorMessage = logChild.ErrorMessage;
+                    string errorrowNumber = logChild.ErrorRowNumber;
+
                     string[] errorRowNumbers = errorrowNumber.Split(',');
+
+                    string[] rows = logChild.Filedata.Split(';');
 
                     for (int i = 1; i < rows.Length; i++)
                     {
@@ -874,12 +805,16 @@ namespace ExcelSyncHub.Service
                         string[] values = cleanedRow.Split(',');
 
                         // Display each ErrorRowNumber on a separate row
-                        columnNamesWorksheet.Range[rowIndex, 1].Text = values[0];  // Assuming id is the first column
-                        columnNamesWorksheet.Range[rowIndex, 2].Text = values[1];  // Assuming username is the second column
-                        columnNamesWorksheet.Range[rowIndex, columns.Count + 1].Text = errorMessage;
-                        columnNamesWorksheet.Range[rowIndex, columns.Count + 2].Text = errorRowNumbers[i - 1]; // Use (i - 1) to get the corresponding ErrorRowNumber
+                        for (int j = 0; j < values.Length; j++)
+                        {
+                            columnNamesWorksheet.Range[rowIndex, j + 1].Text = values[j];
+                        }
+
+                        columnNamesWorksheet.Range[rowIndex, values.Length + 1].Text = errorMessage;
+                        columnNamesWorksheet.Range[rowIndex, values.Length + 2].Text = errorRowNumbers[i - 1]; // Use (i - 1) to get the corresponding ErrorRowNumber
                         rowIndex++;
                     }
+
                 }
             }
             catch (Exception ex)
@@ -1212,48 +1147,51 @@ namespace ExcelSyncHub.Service
                 }
             }
 
-
-            HashSet<string> seenValues = new HashSet<string>();
-            var ids = await GetAllIdsFromDynamicTable(connectionDTO,tableName);
-
-            for (int row = 0; row < validRowsDataTable.Rows.Count; row++)
+            if (!String.IsNullOrEmpty(columnName))
             {
-                bool rowValidationFailed = false;
-                //  var badRowData = new List<string>();
+                HashSet<string> seenValues = new HashSet<string>();
+                var ids = await GetAllIdsFromDynamicTable(connectionDTO, tableName);
+                List<string> idsAsStringList = ids.Select(item => item.ToString()).Cast<string>().ToList();
 
-                for (int col = 0; col < primaryKeyColumns.Count; col++)
+                for (int row = 0; row < validRowsDataTable.Rows.Count; row++)
                 {
-                    int primaryKeyColumnIndex = primaryKeyColumns[col];
-                    string cellData = validRowsDataTable.Rows[row][primaryKeyColumnIndex].ToString();
+                    bool rowValidationFailed = false;
+                    //  var badRowData = new List<string>();
 
-                    if (seenValues.Contains(cellData))
+                    for (int col = 0; col < primaryKeyColumns.Count; col++)
                     {
-                        // Set the flag to indicate validation failure for this row
-                        rowValidationFailed = true;
-                        columnName = columnsDTO[primaryKeyColumnIndex].ColumnName;
-                        badRows.Add(string.Join(",", validRowsDataTable.Rows[row].ItemArray)); // Store the row data
-                        break; // Exit the loop as soon as a validation failure is encountered
+                        int primaryKeyColumnIndex = primaryKeyColumns[col];
+                        string cellData = validRowsDataTable.Rows[row][primaryKeyColumnIndex].ToString();
+
+                        if (seenValues.Contains(cellData))
+                        {
+                            // Set the flag to indicate validation failure for this row
+                            rowValidationFailed = true;
+                            columnName = columnsDTO[primaryKeyColumnIndex].ColumnName;
+                            badRows.Add(string.Join(",", validRowsDataTable.Rows[row].ItemArray)); // Store the row data
+                            break; // Exit the loop as soon as a validation failure is encountered
+                        }
+
+                        if (idsAsStringList.Contains(cellData))
+                        {
+                            rowValidationFailed = true;
+                            columnName = columnsDTO[primaryKeyColumnIndex].ColumnName;
+                            badRows.Add(string.Join(",", validRowsDataTable.Rows[row].ItemArray)); // Store the row data
+                            break;
+                        }
+
+                        // Store the value for duplicate checking
+                        seenValues.Add(cellData);
                     }
 
-                    if (ids.Contains(cellData))
+                    // If row validation succeeded, add the entire row to the successdata DataTable
+                    if (!rowValidationFailed)
                     {
-                        rowValidationFailed = true;
-                        columnName = columnsDTO[primaryKeyColumnIndex].ColumnName;
-                        badRows.Add(string.Join(",", validRowsDataTable.Rows[row].ItemArray)); // Store the row data
-                        break;
+                        successdata.Rows.Add(validRowsDataTable.Rows[row].ItemArray);
                     }
-
-                    // Store the value for duplicate checking
-                    seenValues.Add(cellData);
                 }
 
-                // If row validation succeeded, add the entire row to the successdata DataTable
-                if (!rowValidationFailed)
-                {
-                    successdata.Rows.Add(validRowsDataTable.Rows[row].ItemArray);
-                }
             }
-
             // Return both bad rows and success data using the custom class
             return new ValidationResultData { BadRows = badRows, SuccessData = successdata, Column_Name = columnName };
         }
@@ -1436,32 +1374,42 @@ namespace ExcelSyncHub.Service
         }
 
         //Insert uploaded data into Client db
-        public async Task InsertDataFromDataTableToPostgreSQL(DataTable data, string tableName, List<string> columns, IFormFile file,DBConnectionDTO connectionDTO)
+        public async Task InsertDataFromDataTableToPostgreSQL(DataTable data, string tableName, List<string> columns, IFormFile file, DBConnectionDTO connectionDTO)
         {
             try
             {
                 var columnProperties = GetColumnsForEntity(tableName).ToList();
                 List<ColumnMetaDataDTO> booleancolumns = columnProperties.Where(c => c.Datatype.ToLower() == "boolean").ToList();
-
-                var listofvaluecolumns = columnProperties.Where(c => c.Datatype.ToLower() == "listofvalue").ToList();
-
+                List<ColumnMetaDataDTO> jsonColumns = columnProperties.Where(c => c.Datatype.ToLower() == "jsonb").ToList();
                 List<Dictionary<string, string>> convertedDataList = new List<Dictionary<string, string>>();
 
                 foreach (DataRow row in data.Rows)
                 {
                     Dictionary<string, string> convertedData = new Dictionary<string, string>();
-                    for (int i = 0; i < row.ItemArray.Length; i++)
-                    {
-                        string cellValue = row[i].ToString();
 
-                        ColumnMetaDataDTO columnProperty = columnProperties.FirstOrDefault(col => col.ColumnName == data.Columns[i].ColumnName);
+                    foreach (DataColumn column in data.Columns)
+                    {
+                        string columnName = column.ColumnName;
+                        string cellValue = row[column].ToString();
+
+                        ColumnMetaDataDTO columnProperty = columnProperties.FirstOrDefault(col => col.ColumnName == columnName);
 
                         if (columnProperty != null)
                         {
-                            // Use the column name from ColumnProperties as the key and the cell value as the value
-                            convertedData[columnProperty.ColumnName] = cellValue;
+                            if (jsonColumns.Any(jsonCol => jsonCol.ColumnName == columnName) && !IsJson(cellValue))
+                            {
+                                // Convert the value to JSON format for JSONB columns
+                                var jsonObject = new { JsonColumnName = cellValue };
+                                convertedData[columnName] = JsonConvert.SerializeObject(jsonObject);
+                            }
+                            else
+                            {
+                                // Use the column name from ColumnProperties as the key and the cell value as the value
+                                convertedData[columnName] = cellValue;
+                            }
                         }
                     }
+
                     convertedDataList.Add(convertedData);
                 }
 
@@ -1470,7 +1418,22 @@ namespace ExcelSyncHub.Service
 
                 tableName = storeEntity.EntityName;
 
-                var connectionString = _httpContextAccessor.HttpContext.Session.GetString("ConnectionString");
+                string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+
+                // Convert the parameters to strings
+                string connectionDTOString = JsonConvert.SerializeObject(new DBConnectionDTO
+                {
+                    Provider = connectionDTO.Provider,
+                    HostName = connectionDTO.HostName,
+                    DataBase = connectionDTO.DataBase,
+                    UserName = connectionDTO.UserName,
+                    Password = encodedPassword
+                });
+
+                // Convert the parameters to strings
+                string convertedDataListString = JsonConvert.SerializeObject(convertedDataList);
+                string booleanColumnsString = JsonConvert.SerializeObject(booleancolumns);
+
 
                 // Create an HttpClient instance
                 using (var httpClient = new HttpClient())
@@ -1478,24 +1441,31 @@ namespace ExcelSyncHub.Service
                     // Set the base address for the external API
                     httpClient.BaseAddress = new Uri("https://localhost:7246");
 
-                    var queryParams = $"?connectionDTO={JsonConvert.SerializeObject(connectionDTO)}" +
-                          $"&convertedDataList={JsonConvert.SerializeObject(convertedDataList)}" +
-                          $"&booleanColumns={JsonConvert.SerializeObject(booleancolumns)}" +
-                          $"&tableName={tableName}";
+                    // Create query parameters
+                    var queryString = new Dictionary<string, string>
+                    {
+                        { "ConnectionDTO", connectionDTOString },
+                        { "ConvertedDataList", convertedDataListString },
+                        { "BooleanColumns", booleanColumnsString },
+                        { "TableName", tableName }
+                    };
 
-                    // Call the external API
-                    var response = await httpClient.PostAsync($"/EntityMigrate/InsertData{queryParams}", null);
+                    // Call the external API with the query parameters
+                    var response = await httpClient.PostAsync($"/EntityMigrate/InsertData?{ToQueryString(queryString)}", null);
 
                     // Check the response status
                     if (response.IsSuccessStatusCode)
                     {
-                        // Continue with the rest of your method logic...
+                        // Process successful response
+                        var result = await response.Content.ReadAsStringAsync();
+                        // Handle the result as needed
                     }
                     else
                     {
-                        // Handle the error, log, or throw a new exception as needed
+                        // Handle error response
+                        // You can inspect the response status code and content for more information
                         var errorMessage = await response.Content.ReadAsStringAsync();
-                        throw new Exception($"Failed to insert data. Error: {errorMessage}");
+                        // Handle the error message
                     }
                 }
             }
@@ -1505,6 +1475,26 @@ namespace ExcelSyncHub.Service
                 throw new Exception($"Error in InsertDataFromDataTableToPostgreSQL: {ex.Message}");
             }
         }
+
+        private bool IsJson(string str)
+        {
+            try
+            {
+                JsonConvert.DeserializeObject(str);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Helper method to convert dictionary to query string
+        private string ToQueryString(Dictionary<string, string> parameters)
+        {
+            return string.Join("&", parameters.Select(x => $"{WebUtility.UrlEncode(x.Key)}={WebUtility.UrlEncode(x.Value)}"));
+        }
+
         public int GetEntityIdByEntityNamefromui(string entityName)
         {
             // Assuming you have a list of EntityListMetadataModel instances
@@ -1567,36 +1557,49 @@ namespace ExcelSyncHub.Service
         {
             try
             {
-                // Create an HttpClient instance
+                // Assuming you have a valid base URL for the other project
+                string otherApiBaseUrl = "https://localhost:7246/";
+
+                // Create HttpClient instance
                 using (var httpClient = new HttpClient())
                 {
-                    // Set the base address for the API
-                    httpClient.BaseAddress = new Uri("https://localhost:7246");
+                    // Set the base address of the other API
+                    httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
-                    // Call the GetPrimaryColumnData API endpoint
-                    var DBconnectionDTO = connectionDTO;
-                    var response = await httpClient.GetAsync($"/EntityMigrate/GetPrimaryColumnData?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={connectionDTO.Password}&tableName={tableName}");
+                    string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+
+                    // Call the other API to get table details
+                    var response = await httpClient.GetAsync($"EntityMigrate/GetPrimaryColumnData?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={encodedPassword}&tableName={tableName}");
 
                     // Check the response status
                     if (response.IsSuccessStatusCode)
                     {
                         var contentAsString = await response.Content.ReadAsStringAsync();
-                        // Read the response content and convert it to a list of strings
-                        var primaryColumnData = JsonConvert.DeserializeObject<List<dynamic>>(contentAsString);
-                        var ids = primaryColumnData?.Select(item => item.ToString()).ToList();
-                        return ids;
+                        var apiResponse = JsonConvert.DeserializeObject<Models.DTO.APIResponse>(contentAsString);
+
+                        if (apiResponse.IsSuccess)
+                        {
+                            // Assuming Result is a List<dynamic>
+                            var primaryColumnData = JsonConvert.DeserializeObject<List<dynamic>>(Convert.ToString(apiResponse.Result));
+                            return primaryColumnData;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                     else
                     {
                         // Handle the error, log, or throw a new exception as needed
                         var errorMessage = await response.Content.ReadAsStringAsync();
-                        throw new Exception($"Error fetching IDs from the specified table. Details: {errorMessage}");
+                        throw new Exception($"Error calling the GetPrimaryColumnData API. Details: {errorMessage}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception("Error fetching IDs from the specified table.", ex);
+                // Log the exception or handle it appropriately
+                throw new Exception($"Error calling the GetPrimaryColumnData API. Details: {ex.Message}");
             }
         }
 
@@ -1717,7 +1720,7 @@ namespace ExcelSyncHub.Service
 
                         if (double.TryParse(cellData, out double numericValue))
                         {
-                            if (columnDTO.MinLength > 0 && numericValue < columnDTO.MinLength)
+                            if (numericValue < columnDTO.MinRange)
                             {
                                 // Your logic for when numericValue is less than MinLength
                                 rowValidationFailed = true;
@@ -1729,7 +1732,7 @@ namespace ExcelSyncHub.Service
                                 break;
                             }
 
-                            if (columnDTO.MaxLength > 0 && numericValue > columnDTO.MaxLength)
+                            if (numericValue > columnDTO.MaxRange)
                             {
                                 // Your logic for when numericValue is greater than MaxLength
                                 rowValidationFailed = true;
@@ -1752,7 +1755,7 @@ namespace ExcelSyncHub.Service
 
                         if (double.TryParse(cellData, out double numericValue))
                         {
-                            if (columnDTO.MinLength > 0 && numericValue < columnDTO.MinLength)
+                            if (numericValue < columnDTO.MinRange)
                             {
                                 // Your logic for when numericValue is less than MinLength
                                 rowValidationFailed = true;
@@ -1764,7 +1767,7 @@ namespace ExcelSyncHub.Service
                                 break;
                             }
 
-                            if (columnDTO.MaxLength > 0 && numericValue > columnDTO.MaxLength)
+                            if (numericValue > columnDTO.MaxRange)
                             {
                                 // Your logic for when numericValue is greater than MaxLength
                                 rowValidationFailed = true;
@@ -1787,6 +1790,127 @@ namespace ExcelSyncHub.Service
             // Return both results
             return new ValidationResultData { BadRows = badRows, SuccessData = validRowsDataTable, errorcolumns = errorColumnNames, Column_Name = string.Empty };
         }
+
+        //Length validation
+        public async Task<ValidationResultData> ValidateLength(ValidationResultData validationResult, List<ColumnMetaDataDTO> columnsDTO, string tableName)
+        {
+            List<string> badRows = new List<string>();
+            List<string> errorColumnNames = new List<string>();
+            var excelData = validationResult.SuccessData;
+            DataTable validRowsDataTable = excelData.Clone(); // Create a DataTable to store valid rows
+            for (int row = 0; row < excelData.Rows.Count; row++)
+            {
+                bool rowValidationFailed = false;
+
+                string badRow = string.Join(",", excelData.Rows[row].ItemArray);
+
+                if (excelData.Columns.Contains("ErrorMessage"))
+                {
+                    for (int col = 0; col < excelData.Columns.Count - 3; col++)
+                    {
+                        string cellData = excelData.Rows[row][col].ToString();
+                        ColumnMetaDataDTO columnDTO = columnsDTO[col];
+
+                            if (columnDTO.MinLength > cellData.Length)
+                            {
+                                // Your logic for when numericValue is less than MinLength
+                                rowValidationFailed = true;
+                                badRows.Add(badRow);
+                                if (!errorColumnNames.Contains(columnDTO.ColumnName))
+                                {
+                                    errorColumnNames.Add(columnDTO.ColumnName);
+                                }
+                                break;
+                            }
+
+                            if (columnDTO.MaxLength < cellData.Length)
+                            {
+                                // Your logic for when numericValue is greater than MaxLength
+                                rowValidationFailed = true;
+                                badRows.Add(badRow);
+                                if (!errorColumnNames.Contains(columnDTO.ColumnName))
+                                {
+                                    errorColumnNames.Add(columnDTO.ColumnName);
+                                }
+                                break;
+                            }
+                        }
+                }
+                else
+                {
+                    for (int col = 0; col < excelData.Columns.Count - 2; col++)
+                    {
+                        string cellData = excelData.Rows[row][col].ToString();
+                        ColumnMetaDataDTO columnDTO = columnsDTO[col];
+
+                            if (columnDTO.MinLength > cellData.Length)
+                            {
+                                // Your logic for when numericValue is less than MinLength
+                                rowValidationFailed = true;
+                                badRows.Add(badRow);
+                                if (!errorColumnNames.Contains(columnDTO.ColumnName))
+                                {
+                                    errorColumnNames.Add(columnDTO.ColumnName);
+                                }
+                                break;
+                            }
+
+                            if (columnDTO.MaxLength < cellData.Length)
+                            {
+                                // Your logic for when numericValue is greater than MaxLength
+                                rowValidationFailed = true;
+                                badRows.Add(badRow);
+                                if (!errorColumnNames.Contains(columnDTO.ColumnName))
+                                {
+                                    errorColumnNames.Add(columnDTO.ColumnName);
+                                }
+                                break;
+                            }
+                    }
+                }
+
+                if (!rowValidationFailed)
+                {
+                    validRowsDataTable.Rows.Add(excelData.Rows[row].ItemArray);
+                }
+            }
+            // Return both results
+            return new ValidationResultData { BadRows = badRows, SuccessData = validRowsDataTable, errorcolumns = errorColumnNames, Column_Name = string.Empty };
+        }
+
+        //Convert range validation result to result type
+        public async Task<ValidationResult> resultparamsforlength(ValidationResultData validationResult, string comma_separated_string, string tableName)
+        {
+            var badRowsPrimaryKey = validationResult.BadRows;
+
+            string columnName = validationResult.Column_Name;
+
+            badRowsPrimaryKey = badRowsPrimaryKey.Where(x => x != "").ToList();
+            string values = string.Join(",", badRowsPrimaryKey.Select(row => row.Split(',').Last()));
+
+            badRowsPrimaryKey.Insert(0, comma_separated_string);
+
+            List<string> modifiedRows = badRowsPrimaryKey.Select(row =>
+            {
+                int lastCommaIndex = row.LastIndexOf(',');
+                if (lastCommaIndex >= 0)
+                {
+                    return row.Substring(0, lastCommaIndex);
+                }
+                else
+                {
+                    return row; // No comma found, keep the original string
+                }
+            }).Where(row => !string.IsNullOrEmpty(row)).ToList();
+            badRowsPrimaryKey = modifiedRows;
+            string delimiter = ";"; // Specify the delimiter you want
+            string baddatas = string.Join(delimiter, badRowsPrimaryKey);
+            string errorMessages = "Incorrect Length Value on " + columnName + " " + "in" + " " + tableName;
+
+            // Return both results
+            return new ValidationResult { ErrorRowNumber = values, Filedatas = baddatas, errorMessages = errorMessages };
+        }
+
 
         public async Task<List<LogChild>> GetAllLogChildsByParentIDAsync(int parentID)
         {

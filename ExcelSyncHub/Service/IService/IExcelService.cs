@@ -23,6 +23,7 @@ namespace ExcelSyncHub.Service.IService
         public Task<ValidationResult> resultparamsforprimary(ValidationResultData validationResult, string comma_separated_string, string tableName);
 
         public Task<ValidationResult> resultparamsforrange(ValidationResultData validationResult, string comma_separated_string, string tableName);
+        public Task<ValidationResult> resultparamsforlength(ValidationResultData validationResult, string comma_separated_string, string tableName);
 
         public Task<LogDTO> Createlog(string tableName, List<string> filedata, string fileName, int successdata, List<string> errorMessage, int total_count, List<string> ErrorRowNumber);
 
@@ -39,6 +40,7 @@ namespace ExcelSyncHub.Service.IService
         public List<dynamic> GetTableDataByChecklistEntityValue(DBConnectionDTO connectionDTO, int checklistEntityValue);
 
         public Task<ValidationResultData> ValidateRange(ValidationResultData validationResult, List<ColumnMetaDataDTO> columnsDTO, string tableName);
+        public Task<ValidationResultData> ValidateLength(ValidationResultData validationResult, List<ColumnMetaDataDTO> columnsDTO, string tableName);
 
     }
 }

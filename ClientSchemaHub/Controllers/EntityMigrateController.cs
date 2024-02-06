@@ -75,21 +75,30 @@ namespace ClientSchemaHub.Controllers
 
         [HttpPost("InsertData")]
         public async Task<ActionResult<APIResponse>> InsertData(
-    [FromQuery] string connectionDTO,
-    [FromQuery] string convertedDataList,
-    [FromQuery] string booleanColumns,
-    [FromQuery] string tableName)
+        [FromQuery] string? ConnectionDTO,
+        [FromQuery] string? ConvertedDataList,
+        [FromQuery] string? BooleanColumns,
+        [FromQuery] string? TableName)
         {
             try
             {
-                // Convert the string parameters to their respective types (e.g., deserialize JSON strings).
-                DBConnectionDTO connection = JsonConvert.DeserializeObject<DBConnectionDTO>(connectionDTO);
-                List<Dictionary<string, string>> convertedData = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(convertedDataList);
-                List<ColumnMetaDataDTO> booleanColumnsList = JsonConvert.DeserializeObject<List<ColumnMetaDataDTO>>(booleanColumns);
+                if (ConnectionDTO == null || TableName == null)
+                {
 
-                // Your action code...
+                    return BadRequest("Missing required parameters.");
+                }
 
-                var success = await _generalDatabaseService.Insertdata(connection, convertedData, booleanColumnsList, tableName);
+                string decodedConnectionDTO = Uri.UnescapeDataString(ConnectionDTO);
+                DBConnectionDTO connection = JsonConvert.DeserializeObject<DBConnectionDTO>(decodedConnectionDTO);
+
+                // Convert BooleanColumns string to List<ColumnMetaDataDTO>
+                List<ColumnMetaDataDTO> booleanColumns = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ColumnMetaDataDTO>>(BooleanColumns);
+
+                // Convert ConvertedDataList string to List<Dictionary<string, string>>
+                List<Dictionary<string, string>> convertedDataList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(ConvertedDataList);
+
+
+                var success = await _generalDatabaseService.InsertdataGeneral(connection, convertedDataList, booleanColumns, TableName);
 
                 var responseModel = new APIResponse
                 {
@@ -146,7 +155,7 @@ namespace ClientSchemaHub.Controllers
         }
 
         [HttpGet("GetTabledata")]
-        public async Task<ActionResult<APIResponse>> GetTabledata([FromQuery] DBConnectionDTO connectionDto, string tableName)
+        public async Task<ActionResult<APIResponse>> GetTabledata([FromQuery]DBConnectionDTO connectionDto, string tableName)
         {
             try
             {
@@ -176,7 +185,7 @@ namespace ClientSchemaHub.Controllers
         }
 
         [HttpGet("GetPrimaryColumnData")]
-        public async Task<ActionResult<APIResponse>> GetPrimaryColumnData([FromQuery] DBConnectionDTO connectionDto, string tableName)
+        public async Task<ActionResult<APIResponse>> GetPrimaryColumnData([FromQuery]DBConnectionDTO connectionDto, string tableName)
         {
             try
             {

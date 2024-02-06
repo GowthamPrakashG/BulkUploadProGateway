@@ -126,13 +126,13 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<CloumnDTO>> GetAllColumnsAsync()
+        public async Task<List<ColumnDTO>> GetAllColumnsAsync()
         {
             try
             {
                 var columns = await _context.ColumnMetaDataEntity.ToListAsync();
 
-                var columnDTOs = columns.Select(column => new Model.DTO.CloumnDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.ColumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -166,7 +166,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<CloumnDTO> GetColumnByIdAsync(int id)
+        public async Task<ColumnDTO> GetColumnByIdAsync(int id)
         {
             try
             {
@@ -178,7 +178,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new Model.DTO.CloumnDTO
+                var columnDTO = new Model.DTO.ColumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -210,7 +210,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<CloumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
+        public async Task<ColumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
-                var columnDTO = new Model.DTO.CloumnDTO
+                var columnDTO = new Model.DTO.ColumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -254,7 +254,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<CloumnDTO>> GetColumnsByEntityIdAsync(int entityId)
+        public async Task<List<ColumnDTO>> GetColumnsByEntityIdAsync(int entityId)
         {
             try
             {
@@ -262,7 +262,7 @@ namespace SchemaCraftHub.Service
                     .Where(column => column.EntityId == entityId)
                     .ToListAsync();
 
-                var columnDTOs = columns.Select(column => new Model.DTO.CloumnDTO
+                var columnDTOs = columns.Select(column => new Model.DTO.ColumnDTO
                 {
                     Id = column.Id,
                     ColumnName = column.ColumnName,
@@ -333,9 +333,9 @@ namespace SchemaCraftHub.Service
 
                                 if (table_exists != null)
                                 {
-                                    var insertcolumnEntities = new List<CloumnDTO>();
+                                    var insertcolumnEntities = new List<ColumnDTO>();
 
-                                    var updatecolumnEntities = new List<CloumnDTO>();
+                                    var updatecolumnEntities = new List<ColumnDTO>();
 
                                     foreach (var columnDTO in table.Columns)
                                     {
@@ -351,7 +351,7 @@ namespace SchemaCraftHub.Service
                                             {
                                                 ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
                                             }
-                                            var columnEntity = new CloumnDTO
+                                            var columnEntity = new ColumnDTO
                                             {
                                                 ColumnName = columnDTO.ColumnName,
                                                 Datatype = columnDTO.DataType,
@@ -373,7 +373,7 @@ namespace SchemaCraftHub.Service
                                             {
                                                 ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
                                             }
-                                            var columnEntity = new CloumnDTO
+                                            var columnEntity = new ColumnDTO
                                             {
                                                 Id = column_exists.Id,
                                                 ColumnName = columnDTO.ColumnName,
@@ -449,7 +449,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task InsertColumnsAsync(List<CloumnDTO> columns)
+        public async Task InsertColumnsAsync(List<ColumnDTO> columns)
         {
             try
             {
@@ -537,7 +537,7 @@ namespace SchemaCraftHub.Service
 
         }
 
-        private async Task<List<ColumnDetailsDTO>> MapColumns(List<CloumnDTO> columns)
+        private async Task<List<ColumnDetailsDTO>> MapColumns(List<ColumnDTO> columns)
         {
             var columnDetailsList = new List<ColumnDetailsDTO>();
 
@@ -600,7 +600,7 @@ namespace SchemaCraftHub.Service
             return sqlBuilder.ToString();
         }
 
-        public async Task UpdateColumnsAsync(List<CloumnDTO> columns)
+        public async Task UpdateColumnsAsync(List<ColumnDTO> columns)
         {
             try
             {
@@ -634,7 +634,7 @@ namespace SchemaCraftHub.Service
                         // Update other properties as needed
 
                         // Mark the entity as modified
-                        _context.ColumnMetaDataEntity.Update(existingColumnEntity);
+                         _context.ColumnMetaDataEntity.Update(existingColumnEntity);
                     }
                     else
                     {
@@ -650,6 +650,55 @@ namespace SchemaCraftHub.Service
             }
         }
 
+        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName)
+        {
+            try
+            {
+                var table = await _context.TableMetaDataEntity
+                    .FirstOrDefaultAsync(t => t.HostName.ToLower() == hostName.ToLower() && t.Provider.ToLower() == provider.ToLower() && t.DatabaseName.ToLower() == databaseName.ToLower() && t.EntityName.ToLower() == tableName.ToLower());
+
+                if (table == null)
+                {
+                    // Handle the case where the table with the given parameters is not found
+                    return null;
+                }
+
+                var columns = await _context.ColumnMetaDataEntity
+                    .Where(column => column.EntityId == table.Id)
+                    .ToListAsync();
+
+                var columnDTOs = columns.Select(column => new Model.DTO.ColumnDTO
+                {
+                    Id = column.Id,
+                    ColumnName = column.ColumnName,
+                    Datatype = column.Datatype,
+                    IsPrimaryKey = column.IsPrimaryKey,
+                    IsForeignKey = column.IsForeignKey,
+                    EntityId = column.EntityId,
+                    ReferenceEntityID = column.ReferenceEntityID,
+                    ReferenceColumnID = column.ReferenceColumnID,
+                    Length = column.Length,
+                    MinLength = column.MinLength,
+                    MaxLength = column.MaxLength,
+                    MaxRange = column.MaxRange,
+                    MinRange = column.MinRange,
+                    DateMinValue = column.DateMinValue,
+                    DateMaxValue = column.DateMaxValue,
+                    Description = column.Description,
+                    IsNullable = column.IsNullable,
+                    DefaultValue = column.DefaultValue,
+                    True = column.True,
+                    False = column.False,
+                    // Include other properties as needed
+                }).ToList();
+
+                return columnDTOs;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+            }
+        }
 
     }
 }
