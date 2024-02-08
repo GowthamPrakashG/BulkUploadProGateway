@@ -222,12 +222,12 @@ WHERE
 
                     // Query to get the primary key column name
                     string primaryKeyQuery = $@"
-            SELECT column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-            ON tc.constraint_name = kcu.constraint_name
-            WHERE constraint_type = 'PRIMARY KEY'
-            AND kcu.table_name = '{tableName}'";
+                                                SELECT column_name
+                                                FROM information_schema.table_constraints tc
+                                                JOIN information_schema.key_column_usage kcu
+                                                ON tc.constraint_name = kcu.constraint_name
+                                                WHERE constraint_type = 'PRIMARY KEY'
+                                                AND kcu.table_name = '{tableName}'";
 
                     string primaryKeyColumnName = await connection.QueryFirstOrDefaultAsync<string>(primaryKeyQuery);
 

@@ -307,7 +307,6 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-
         [HttpGet("cliententity")]
         public async Task<IActionResult> ClientEntity([FromQuery] DBConnectionDTO connectionDTO)
         {
@@ -417,8 +416,6 @@ namespace SchemaCraftHub.Controllers
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }
-
-
 
         [HttpGet("columns/{hostName}/{provider}/{databaseName}/{tableName}")]
         public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName)

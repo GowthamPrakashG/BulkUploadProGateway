@@ -235,6 +235,38 @@ namespace AuthCraftHub.Services
             return RoleDTO;
         }
 
+        internal async Task<bool> CreateRole(RoleDTO roleDTO)
+        {
+            try
+            {
+                await _context.RoleEntity.AddAsync(roleDTO);
+
+                _context.SaveChanges();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return false;
+            }
+        }
+
+        internal async Task<RoleDTO?> GetRoleByName(string rolename)
+        {
+            var role = _context.RoleEntity.FirstOrDefaultAsync(c => c.RoleName.ToLower() == rolename.ToLower()).Result;
+
+            if (role == null)
+            {
+                return null;
+            }
+
+            RoleDTO RoleDTO = (RoleDTO)role;
+
+            return RoleDTO;
+        }
 
     }
 }

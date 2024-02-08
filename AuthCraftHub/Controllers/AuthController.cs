@@ -353,5 +353,52 @@ namespace AuthCraftHub.Controllers
                 return StatusCode(500, _response);
             }
         }
+
+        [HttpPost("createNewRole")]
+        public async Task<ActionResult<APIResponse>> CreateRole(RoleDTO roleDTO)
+        {
+            try
+            {
+                if (roleDTO.RoleName == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadGateway;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The roleDTO parameter cannot be null." };
+                    return BadRequest(_response);
+                }
+
+                var IsroleExists = await _authService.GetRoleByName(roleDTO.RoleName);
+
+                if (IsroleExists != null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "The RoleName is already exists" };
+                    return NotFound(_response);
+                }
+
+                var getRole = await _authService.CreateRole(roleDTO);
+
+                if (getRole == false)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = new List<string>() { "Couldnot able to create this role" };
+                    return NotFound(_response);
+                }
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = getRole;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.IsSuccess = false;
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
+                return StatusCode(500, _response);
+            }
+        }
     }
 }

@@ -505,8 +505,10 @@ namespace SchemaCraftHub.Service
                 // Set the base address of the other API
                 httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
+                string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+
                 // Call the other API to get table details
-                var response = await httpClient.GetAsync($"/EntityMigrate/CreateTable?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={connectionDTO.Password}&query={createquery}");
+                var response = await httpClient.GetAsync($"/EntityMigrate/CreateTable?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={encodedPassword}&query={createquery}");
 
                 // Check if the request was successful
                 if (response.IsSuccessStatusCode)
