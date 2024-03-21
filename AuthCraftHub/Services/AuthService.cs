@@ -268,6 +268,302 @@ namespace AuthCraftHub.Services
             return RoleDTO;
         }
 
+        internal async Task<RoleDTO?> UpdateRoleNameAsync(int roleId, string newRoleName)
+        {
+            try
+            {
+                // Check if the new role name already exists
+                var existingRole = await _context.RoleEntity
+                    .FirstOrDefaultAsync(r => r.RoleName.ToLower() == newRoleName.ToLower() && r.Id != roleId);
+
+                if (existingRole != null)
+                {
+                    // The new role name already exists, return null or handle as needed
+                    return null;
+                }
+
+                // Retrieve the role to be updated
+                var roleToUpdate = await _context.RoleEntity.FirstOrDefaultAsync(r => r.Id == roleId);
+
+                if (roleToUpdate == null)
+                {
+                    // Role not found, return null or handle as needed
+                    return null;
+                }
+
+                // Update the role name
+                roleToUpdate.RoleName = newRoleName;
+
+                // Save changes to the database
+                _context.SaveChanges();
+
+                // Return the updated RoleDTO
+                return new RoleDTO
+                {
+                    Id = roleToUpdate.Id,
+                    RoleName = roleToUpdate.RoleName
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return null;
+            }
+        }
+
+        // Screens
+        internal async Task<List<ScreenDTO>> GetScreens()
+        {
+            try
+            {
+                var ScreenData = _context.ScreenEntity
+                    .Select(Screen => new ScreenDTO
+                    {
+                        Id = Screen.Id,
+                        ScreenName = Screen.ScreenName,
+                        RouteURL = Screen.RouteURL
+                    })
+                    .ToList();
+
+                return ScreenData;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return null;
+            }
+        }
+
+        internal async Task<ScreenDTO?> GetScreenById(int id)
+        {
+            var Screen = _context.ScreenEntity.FirstOrDefaultAsync(c => c.Id == id).Result;
+
+            if (Screen == null)
+            {
+                return null;
+            }
+
+            ScreenDTO ScreenDTO = (ScreenDTO)Screen;
+
+            return ScreenDTO;
+        }
+
+        internal async Task<bool> CreateScreen(ScreenDTO ScreenDTO)
+        {
+            try
+            {
+                await _context.ScreenEntity.AddAsync(ScreenDTO);
+
+                _context.SaveChanges();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return false;
+            }
+        }
+
+        internal async Task<ScreenDTO?> GetScreenByName(string Screenname)
+        {
+            var Screen = _context.ScreenEntity.FirstOrDefaultAsync(c => c.ScreenName.ToLower() == Screenname.ToLower()).Result;
+
+            if (Screen == null)
+            {
+                return null;
+            }
+
+            ScreenDTO ScreenDTO = (ScreenDTO)Screen;
+
+            return ScreenDTO;
+        }
+
+        internal async Task<ScreenDTO?> UpdateScreenNameAsync(int ScreenId, ScreenDTO newScreenName)
+        {
+            try
+            {
+                // Check if the new Screen name already exists
+                var existingScreen = await _context.ScreenEntity
+                    .FirstOrDefaultAsync(r => r.ScreenName.ToLower() == newScreenName.ScreenName.ToLower() && r.Id != ScreenId);
+
+                if (existingScreen != null)
+                {
+                    // The new Screen name already exists, return null or handle as needed
+                    return null;
+                }
+
+                // Retrieve the Screen to be updated
+                var ScreenToUpdate = await _context.ScreenEntity.FirstOrDefaultAsync(r => r.Id == ScreenId);
+
+                if (ScreenToUpdate == null)
+                {
+                    // Screen not found, return null or handle as needed
+                    return null;
+                }
+
+                // Update the Screen name
+                ScreenToUpdate.ScreenName = newScreenName.ScreenName;
+                ScreenToUpdate.RouteURL = newScreenName.RouteURL;
+
+                // Save changes to the database
+                _context.SaveChanges();
+
+                // Return the updated ScreenDTO
+                return new ScreenDTO
+                {
+                    Id = ScreenToUpdate.Id,
+                    ScreenName = ScreenToUpdate.ScreenName,
+                    RouteURL = ScreenToUpdate.RouteURL
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return null;
+            }
+        }
+
+        //RoleScreen
+        internal async Task<List<RoleScreenMappingDTO>> GetRolesScreens()
+        {
+            try
+            {
+                var RoleScreenData = _context.RoleScreenMapping
+                    .Select(RoleScreen => new RoleScreenMappingDTO
+                    {
+                        Id = RoleScreen.Id,
+                        ScreenId = RoleScreen.ScreenId,
+                        RoleId = RoleScreen.RoleId
+                    })
+                    .ToList();
+
+                return RoleScreenData;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return null;
+            }
+        }
+
+        internal async Task<RoleScreenMappingDTO?> GetRoleScreenByMapId(int id)
+        {
+            var Screen = _context.RoleScreenMapping.FirstOrDefaultAsync(c => c.Id == id).Result;
+
+            if (Screen == null)
+            {
+                return null;
+            }
+
+            RoleScreenMappingDTO ScreenDTO = (RoleScreenMappingDTO)Screen;
+
+            return ScreenDTO;
+        }
+
+        internal async Task<List<RoleScreenMappingDTO>?> GetRoleScreenByRoleId(int id)
+        {
+            var screens = await _context.RoleScreenMapping.Where(c => c.RoleId == id).ToListAsync();
+
+            if (screens == null || screens.Count == 0)
+            {
+                return null;
+            }
+
+            List<RoleScreenMappingDTO> screenDTOs = screens.Select(screen => (RoleScreenMappingDTO)screen).ToList();
+
+            return screenDTOs;
+        }
+
+        internal async Task<List<RoleScreenMappingDTO>?> GetRoleScreenByScreenId(int id)
+        {
+            var screens = await _context.RoleScreenMapping.Where(c => c.ScreenId == id).ToListAsync();
+
+            if (screens == null || screens.Count == 0)
+            {
+                return null;
+            }
+
+            List<RoleScreenMappingDTO> screenDTOs = screens.Select(screen => (RoleScreenMappingDTO)screen).ToList();
+
+            return screenDTOs;
+        }
+
+        internal async Task<bool> CreateRoleScreen(RoleScreenMappingDTO RoleScreenMappingDTO)
+        {
+            try
+            {
+                await _context.RoleScreenMapping.AddAsync(RoleScreenMappingDTO);
+
+                _context.SaveChanges();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return false;
+            }
+        }
+
+        internal async Task<RoleScreenMappingDTO?> UpdateRoleScreenNameAsync(int Id, RoleScreenMappingDTO newScreenName)
+        {
+            try
+            {
+                // Check if the new Screen name already exists
+                var existingScreen = await _context.RoleScreenMapping
+                    .FirstOrDefaultAsync(r => r.ScreenId == newScreenName.ScreenId && r.Id != Id && r.RoleId != newScreenName.RoleId);
+
+                if (existingScreen != null)
+                {
+                    // The new Screen name already exists, return null or handle as needed
+                    return null;
+                }
+
+                // Retrieve the Screen to be updated
+                var ScreenToUpdate = await _context.RoleScreenMapping.FirstOrDefaultAsync(r => r.Id == Id);
+
+                if (ScreenToUpdate == null)
+                {
+                    // Screen not found, return null or handle as needed
+                    return null;
+                }
+
+                // Update the Screen name
+                ScreenToUpdate.ScreenId = newScreenName.ScreenId;
+                ScreenToUpdate.RoleId = newScreenName.RoleId;
+
+                // Save changes to the database
+                _context.SaveChanges();
+
+                // Return the updated ScreenDTO
+                return new RoleScreenMappingDTO
+                {
+                    Id = ScreenToUpdate.Id,
+                    RoleId = ScreenToUpdate.RoleId,
+                    ScreenId = ScreenToUpdate.ScreenId
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You might want to throw an exception or return an error response here
+                return null;
+            }
+        }
     }
 }
 

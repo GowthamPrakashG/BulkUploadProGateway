@@ -17,11 +17,10 @@ namespace DBUtilityHub.Data
         public DbSet<ColumnMetaDataEntity> ColumnMetaDataEntity { get; set; }
         public DbSet<LogParent> LogParents { get; set; }
         public DbSet<LogChild> LogChilds { get; set; }
-
         public DbSet<RoleEntity> RoleEntity { get; set; }
-
         public DbSet<UserEntity> UserEntity { get; set; }
-
+        public DbSet<ScreenEntity> ScreenEntity { get; set; }
+        public DbSet<RoleScreenMapping> RoleScreenMapping { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -43,7 +42,6 @@ namespace DBUtilityHub.Data
                     Phonenumber = "",
                     Gender = "",
                     Status = true
-
                 });
         }
 
