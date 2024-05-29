@@ -15,6 +15,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IPostgreSQLService, PostgreSQLService>();
 builder.Services.AddScoped<IMySQLService, MySQLService>();
+builder.Services.AddScoped<IMSSQLService, MSSQLService>();
 builder.Services.AddScoped<IGeneralDatabaseService, GeneralDatabaseService>();
 
 builder.Services.AddCors(c =>

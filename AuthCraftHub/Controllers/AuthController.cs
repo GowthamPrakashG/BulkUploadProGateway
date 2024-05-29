@@ -4,6 +4,7 @@ using AuthCraftHub.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using DBUtilityHub.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthCraftHub.Controllers
 {
@@ -72,12 +73,12 @@ namespace AuthCraftHub.Controllers
                 }
 
                 var IsUserExists = await _authService.GetUserAsync(userModel.Email);
-                if (IsUserExists  != null)
+                if (IsUserExists != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessage = new List<string>() { "Failed to create user. EmailId already exist" };
-                    return BadRequest(_response); 
+                    return BadRequest(_response);
                 }
 
                 var createdUser = await _authService.CreateUserAsync(userModel);
@@ -139,8 +140,8 @@ namespace AuthCraftHub.Controllers
         public async Task<IActionResult> GetUser(int id)
         {
             try
-            {
-                if(id == 0)
+            { 
+                if (id == 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadGateway;
                     _response.IsSuccess = false;
@@ -373,7 +374,7 @@ namespace AuthCraftHub.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessage = new List<string>() { "The RoleName is already exists" };
+                    _response.ErrorMessage = new List<string>() { "The RoleName  already exists" };
                     return NotFound(_response);
                 }
 
@@ -448,6 +449,7 @@ namespace AuthCraftHub.Controllers
             try
             {
                 var ScreenData = _authService.GetScreens();
+
 
                 if (ScreenData != null)
                 {
@@ -719,18 +721,28 @@ namespace AuthCraftHub.Controllers
         }
 
         [HttpPost("CreateRoleScreen")]
-        public async Task<IActionResult> CreateRoleScreen([FromBody] RoleScreenMappingDTO roleScreenMappingDTO)
+
+        public async Task<IActionResult> CreateRoleScreen([FromBody] RoleScreenMaintainanceDTO roleScreenModel)
         {
             try
             {
-                var result = await _authService.CreateRoleScreen(roleScreenMappingDTO);
+                if (!ModelState.IsValid || roleScreenModel == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessage = ModelState.Values.SelectMany(c => c.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(_response);
+                }
 
-                if (result)
+                var createdrole = await _authService.CreateRoleScreenAsync(roleScreenModel);
+                if (createdrole != null)
                 {
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
+                    _response.Result = createdrole;
                     return Ok(_response);
                 }
+
                 else
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -743,11 +755,11 @@ namespace AuthCraftHub.Controllers
             {
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
-                _response.ErrorMessage = new List<string>() { $"An error occurred: {ex.Message}" };
+                _response.ErrorMessage = new List<string>() { $"An error occurred while processing your request: {Environment.NewLine} {ex.Message} " };
                 return StatusCode(500, _response);
             }
-        }
 
+        }
         [HttpPut("UpdateRoleScreenById/{id}")]
         public async Task<IActionResult> UpdateRoleScreen(int id, [FromBody] RoleScreenMappingDTO newScreenName)
         {
@@ -786,6 +798,7 @@ namespace AuthCraftHub.Controllers
                 return StatusCode(500, _response);
             }
         }
+
 
     }
 }

@@ -13,6 +13,7 @@ using ExcelSyncHub.Service.IService;
 using Spire.Xls.Core;
 using System.Net;
 
+
 namespace ExcelSyncHub.Service
 {
     public class ExcelService : IExcelService
@@ -191,7 +192,7 @@ namespace ExcelSyncHub.Service
         {
             int startRow = 2; // The first row where you want validation
             int endRow = 100000;  // Adjust the last row as needed
-
+            //Export Excel
             if (parentId.HasValue)
             {
                 int columnCount = columnNamesWorksheet.Columns.Length - 2;
@@ -475,6 +476,7 @@ namespace ExcelSyncHub.Service
                     lockrange.Style.Locked = false;
                 }
             }
+            //Normal Excel
             else
             {
                 int columnCount = columnNamesWorksheet.Columns.Length;
@@ -1379,7 +1381,7 @@ namespace ExcelSyncHub.Service
             try
             {
                 var columnProperties = GetColumnsForEntity(tableName).ToList();
-                List<ColumnMetaDataDTO> booleancolumns = columnProperties.Where(c => c.Datatype.ToLower() == "boolean").ToList();
+                List<ColumnMetaDataDTO> booleanColumns = columnProperties.Where(c => c.Datatype.ToLower() == "boolean").ToList();
                 List<ColumnMetaDataDTO> jsonColumns = columnProperties.Where(c => c.Datatype.ToLower() == "jsonb").ToList();
                 List<Dictionary<string, string>> convertedDataList = new List<Dictionary<string, string>>();
 
@@ -1427,12 +1429,17 @@ namespace ExcelSyncHub.Service
                     HostName = connectionDTO.HostName,
                     DataBase = connectionDTO.DataBase,
                     UserName = connectionDTO.UserName,
-                    Password = encodedPassword
+                    Password = encodedPassword 
                 });
+
+                System.Diagnostics.Debug.WriteLine($"Serialized DTO: {connectionDTOString}");
 
                 // Convert the parameters to strings
                 string convertedDataListString = JsonConvert.SerializeObject(convertedDataList);
-                string booleanColumnsString = JsonConvert.SerializeObject(booleancolumns);
+                string booleanColumnsString = JsonConvert.SerializeObject(booleanColumns);
+
+                // Deserialize the JSON string back into a list of dictionaries
+                List<Dictionary<string, string>> deserializedDataList = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(convertedDataListString);
 
 
                 // Create an HttpClient instance
@@ -1441,14 +1448,15 @@ namespace ExcelSyncHub.Service
                     // Set the base address for the external API
                     httpClient.BaseAddress = new Uri("https://localhost:7246");
 
+                    
                     // Create query parameters
                     var queryString = new Dictionary<string, string>
-                    {
-                        { "ConnectionDTO", connectionDTOString },
-                        { "ConvertedDataList", convertedDataListString },
-                        { "BooleanColumns", booleanColumnsString },
-                        { "TableName", tableName }
-                    };
+            {
+                { "ConnectionDTO", connectionDTOString },
+                { "ConvertedDataList", convertedDataListString },
+                { "BooleanColumns", booleanColumnsString },
+                { "TableName", tableName }
+            };
 
                     // Call the external API with the query parameters
                     var response = await httpClient.PostAsync($"/EntityMigrate/InsertData?{ToQueryString(queryString)}", null);
@@ -1475,6 +1483,7 @@ namespace ExcelSyncHub.Service
                 throw new Exception($"Error in InsertDataFromDataTableToPostgreSQL: {ex.Message}");
             }
         }
+
 
         private bool IsJson(string str)
         {
@@ -1567,6 +1576,8 @@ namespace ExcelSyncHub.Service
                     httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
                     string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+                   string encryptedHostName = Uri.EscapeDataString(connectionDTO.HostName);
+
 
                     // Call the other API to get table details
                     var response = await httpClient.GetAsync($"EntityMigrate/GetPrimaryColumnData?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={encodedPassword}&tableName={tableName}");
@@ -1910,8 +1921,6 @@ namespace ExcelSyncHub.Service
             // Return both results
             return new ValidationResult { ErrorRowNumber = values, Filedatas = baddatas, errorMessages = errorMessages };
         }
-
-
         public async Task<List<LogChild>> GetAllLogChildsByParentIDAsync(int parentID)
         {
             try
