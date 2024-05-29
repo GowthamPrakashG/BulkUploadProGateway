@@ -22,6 +22,7 @@ namespace SchemaCraftHub.Controllers
 
         [HttpGet("tables")]
         public async Task<IActionResult> GetAllTables()
+
         {
             try
             {
@@ -80,7 +81,7 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        [HttpGet("tables/{hostName}/{provider}/{databaseName}")]
+        [HttpGet("tables/{hostName}/{provider}/{databaseName}")] //display list in frontend
         public async Task<IActionResult> GetTablesByHostProviderDatabase(string hostName, string provider, string databaseName)
         {
             try
@@ -422,6 +423,7 @@ namespace SchemaCraftHub.Controllers
         {
             try
             {
+
                 var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName);
                 if (table == null)
                 {

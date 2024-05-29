@@ -13,6 +13,7 @@ namespace AuthCraftHub.Services
     public class AuthService
     {
         private readonly ApplicationDbContext _context;
+        private IEnumerable<RoleScreenMappingDTO> screens;
 
         public AuthService(ApplicationDbContext context)
         {
@@ -437,17 +438,15 @@ namespace AuthCraftHub.Services
         {
             try
             {
-                var RoleScreenData = _context.RoleScreenMapping
-                    .Select(RoleScreen => new RoleScreenMappingDTO
-                    {
-                        Id = RoleScreen.Id,
-                        ScreenId = RoleScreen.ScreenId,
-                        RoleId = RoleScreen.RoleId
-                    })
-                    .ToList();
 
-                return RoleScreenData;
-            }
+                var roleScreen = _context.RoleScreenMapping.Include(c => c.Role).Include(c => c.Screen).ToList();
+                var roleScreenMappingDTO = new List<RoleScreenMappingDTO>();
+                roleScreenMappingDTO.AddRange(roleScreen.Select(c => (RoleScreenMappingDTO)c));
+                
+                return roleScreenMappingDTO;
+              
+    }
+            
             catch (Exception ex)
             {
                 // Log the exception or handle it as needed
@@ -455,6 +454,7 @@ namespace AuthCraftHub.Services
                 // You might want to throw an exception or return an error response here
                 return null;
             }
+
         }
 
         internal async Task<RoleScreenMappingDTO?> GetRoleScreenByMapId(int id)
@@ -499,22 +499,36 @@ namespace AuthCraftHub.Services
             return screenDTOs;
         }
 
-        internal async Task<bool> CreateRoleScreen(RoleScreenMappingDTO RoleScreenMappingDTO)
+        internal async Task<RoleScreenMaintainanceDTO> CreateRoleScreenAsync(RoleScreenMaintainanceDTO roleScreenModel)
         {
-            try
+            var existingMapping = await _context.RoleScreenMapping
+                .FirstOrDefaultAsync(r => r.RoleId == roleScreenModel.RoleId && r.ScreenId == roleScreenModel.ScreenId);
+
+            if (existingMapping != null)
             {
-                await _context.RoleScreenMapping.AddAsync(RoleScreenMappingDTO);
+                RoleScreenMaintainanceDTO roleScreenMaintainanceDTO = new RoleScreenMaintainanceDTO
+                {
+                    RoleId = existingMapping.RoleId,
+                    ScreenId = existingMapping.ScreenId,
+                    Id = existingMapping.Id
+                };
 
-                _context.SaveChanges();
+                return roleScreenMaintainanceDTO;
 
-                return true;
             }
-            catch (Exception ex)
+            else
             {
-                // Log the exception or handle it as needed
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                // You might want to throw an exception or return an error response here
-                return false;
+                RoleScreenMapping newRoleScreen = new RoleScreenMapping
+                {
+                    RoleId = roleScreenModel.RoleId,
+                    ScreenId = roleScreenModel.ScreenId
+
+                };
+                _context.RoleScreenMapping.Add(newRoleScreen);
+                await _context.SaveChangesAsync();
+
+                RoleScreenMaintainanceDTO roleScreenMaintainanceDTO = (RoleScreenMaintainanceDTO)newRoleScreen;
+                return roleScreenMaintainanceDTO;
             }
         }
 
@@ -542,7 +556,7 @@ namespace AuthCraftHub.Services
                 }
 
                 // Update the Screen name
-                ScreenToUpdate.ScreenId = newScreenName.ScreenId;
+                //ScreenToUpdate.ScreenId = newScreenName.ScreenId;
                 ScreenToUpdate.RoleId = newScreenName.RoleId;
 
                 // Save changes to the database
@@ -553,7 +567,7 @@ namespace AuthCraftHub.Services
                 {
                     Id = ScreenToUpdate.Id,
                     RoleId = ScreenToUpdate.RoleId,
-                    ScreenId = ScreenToUpdate.ScreenId
+                    //ScreenId = ScreenToUpdate.ScreenId
                 };
             }
             catch (Exception ex)

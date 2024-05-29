@@ -1,18 +1,19 @@
-﻿using System.Data.Common;
-using Dapper;
+﻿using System.Data;
+using System.Data.Common;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
-using Npgsql;
-using System.Data;
+using Dapper;
+using Microsoft.Data.SqlClient;
+
 
 namespace ClientSchemaHub.Service
 {
-    public class PostgreSQLService : IPostgreSQLService
+    public class MSSQLService : IMSSQLService
     {
-        // Register the Npgsql provider
-        public PostgreSQLService()   
+        public MSSQLService()
         {
-            DbProviderFactories.RegisterFactory("postgresql", NpgsqlFactory.Instance);
+            // Register the MS SQL provider
+            DbProviderFactories.RegisterFactory("MS SQL", SqlClientFactory.Instance);
         }
 
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO dBConnection)
@@ -57,7 +58,7 @@ namespace ClientSchemaHub.Service
             }
         }
 
-        //Get all entity names
+        // Get all entity names
         public async Task<List<string>> GetTableNamesAsync(DBConnectionDTO dBConnection)
         {
             try
@@ -86,14 +87,17 @@ namespace ClientSchemaHub.Service
         }
         private async Task<List<string>> GetTableNamesAsync(DbConnection connection)
         {
-            const string query = "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = 'public'";
+            //       const string query = "SHOW TABLES";
+            const string query = @"
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_TYPE = 'BASE TABLE'";
 
             // Use Dapper to execute the query asynchronously and retrieve results dynamically
             return (await connection.QueryAsync<string>(query)).AsList();
         }
 
-
-        //Get Table column properties
+        // Get Table column properties
         public async Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO dBConnection, string tableName)
         {
             try
@@ -131,7 +135,7 @@ namespace ClientSchemaHub.Service
         CASE WHEN IS_NULLABLE = 'NO' THEN 0 ELSE 1 END AS IsNullable, -- Convert to boolean
         (
             SELECT 
-                COUNT(1) > 0
+                CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
             FROM 
                 information_schema.key_column_usage kcu
             WHERE 
@@ -147,11 +151,12 @@ namespace ClientSchemaHub.Service
                 AND kcu.table_name = @TableName
                 AND kcu.column_name = c.column_name
         ) AS IsPrimaryKey,
-        EXISTS (
-            SELECT 1
+        (
+            SELECT 
+                CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
             FROM 
                 information_schema.key_column_usage kcu
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
             WHERE 
                 tc.table_name = @TableName
                 AND tc.constraint_type = 'FOREIGN KEY'
@@ -162,8 +167,8 @@ namespace ClientSchemaHub.Service
                 ccu.table_name
             FROM 
                 information_schema.key_column_usage kcu
-                JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+            JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
             WHERE 
                 tc.table_name = @TableName
                 AND tc.constraint_type = 'FOREIGN KEY'
@@ -174,8 +179,8 @@ namespace ClientSchemaHub.Service
                 ccu.column_name
             FROM 
                 information_schema.key_column_usage kcu
-                JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-                JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
+            JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
+            JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
             WHERE 
                 tc.table_name = @TableName
                 AND tc.constraint_type = 'FOREIGN KEY'
@@ -185,7 +190,6 @@ namespace ClientSchemaHub.Service
         information_schema.columns c
     WHERE 
         table_name = @TableName";
-
 
             try
             {
@@ -205,7 +209,8 @@ namespace ClientSchemaHub.Service
         }
 
 
-        // Get PrimaryKey rescords from the specific table
+
+        // Get primary column data from the specific table
         public async Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
         {
             try
@@ -226,13 +231,14 @@ namespace ClientSchemaHub.Service
 
                     // Query to get the primary key column name
                     string primaryKeyQuery = $@"
-            SELECT column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-            ON tc.constraint_name = kcu.constraint_name
-            WHERE constraint_type = 'PRIMARY KEY'
-            AND kcu.table_name = '{tableName}'";
+        SELECT column_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+        WHERE constraint_type = 'PRIMARY KEY'
+        AND kcu.table_name = '{tableName}'";
 
+                    // Execute the query to get the primary key column name
                     string primaryKeyColumnName = await connection.QueryFirstOrDefaultAsync<string>(primaryKeyQuery);
 
                     // If a primary key column is found, query for its data
@@ -246,15 +252,27 @@ namespace ClientSchemaHub.Service
                         // Extract the values and return as a list of objects
                         var idList = results.Select(result =>
                         {
-                            var dictionary = (IDictionary<string, object>)result;
-                            return dictionary[primaryKeyColumnName];
+                            // Use dynamic object to access column values
+                            IDictionary<string, object> dynamicResult = result;
+
+                            // Try to retrieve the column value by name
+                            object primaryKeyValue = null;
+                            if (dynamicResult != null && dynamicResult.ContainsKey(primaryKeyColumnName))
+                            {
+                                primaryKeyValue = dynamicResult[primaryKeyColumnName];
+                            }
+
+                            // Ensure the value is not null before returning
+                            return primaryKeyValue;
                         }).ToList();
+
 
                         return idList;
                     }
                     else
                     {
-                        throw new InvalidOperationException($"Table '{tableName}' does not have a primary key.");
+                        // If no primary key is found, return an empty list
+                        return new List<object>();
                     }
                 }
             }
@@ -266,27 +284,26 @@ namespace ClientSchemaHub.Service
 
 
 
-        //create Table
-        public async Task<bool> ConvertAndCallCreateTableModel(DBConnectionDTO connectionDTO, string createquery)
+        //create table
+        public async Task<bool> ConvertAndCallCreateTableModel(DBConnectionDTO connectionDTO, string createQuery)
         {
             try
             {
+                // Create a MySQL connection string
+                string connectionString = $"Server={connectionDTO.HostName};Database={connectionDTO.DataBase};User Id={connectionDTO.UserName};Password={connectionDTO.Password}";
 
-                // Create a PostgreSQL connection string
-                string connectionString = $"Host={connectionDTO.HostName};Database={connectionDTO.DataBase};Username={connectionDTO.UserName};Password={connectionDTO.Password}";
-
-                // Create a new PostgreSQL connection
-                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                // Create a new MySQL connection
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
 
                     // Create a command to execute SQL statements
-                    using (NpgsqlCommand command = new NpgsqlCommand())
+                    using (SqlCommand command = new SqlCommand())
                     {
                         command.Connection = connection;
 
                         // Generate the SQL statement to create the table
-                        string createTableSql = createquery;
+                        string createTableSql = createQuery;
 
                         // Set the SQL statement
                         command.CommandText = createTableSql;
@@ -310,76 +327,92 @@ namespace ClientSchemaHub.Service
         //Insert data
         public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>>? convertedDataList, List<ColumnMetaDataDTO>? booleancolumns, string tablename)
         {
-            List<Dictionary<string, string>> dataToRemove = new List<Dictionary<string, string>>();
+            string identityColumnName = "StudentId"; // Replace "StudentId" with your actual identity column name
+
+            if (convertedDataList == null || convertedDataList.Count == 0)
+            {
+                throw new ArgumentException("convertedDataList cannot be null or empty");
+            }
+
+            if (string.IsNullOrEmpty(tablename))
+            {
+                throw new ArgumentException("tablename cannot be null or empty");
+            }
 
             foreach (var data2 in convertedDataList)
             {
-                foreach (var boolvalue in booleancolumns)
+                // Process boolean columns if booleancolumns is not null or empty
+                if (booleancolumns != null && booleancolumns.Count > 0)
                 {
-                    if (data2.ContainsKey(boolvalue.ColumnName))
+                    foreach (var boolvalue in booleancolumns)
                     {
-                        // Update the value for the specific key
-                        var value = data2[boolvalue.ColumnName];
-                        if (!string.IsNullOrEmpty(value))
+                        if (data2.ContainsKey(boolvalue.ColumnName))
                         {
-                            if (value != "0")
+                            var value = data2[boolvalue.ColumnName];
+                            if (!string.IsNullOrEmpty(value))
                             {
-                                if (value != "1")
+                                if (value != "0" && value != "1")
                                 {
-                                    if (value.ToLower() == boolvalue.True.ToLower())
-                                    {
-                                        data2[boolvalue.ColumnName] = "1";
-                                    }
-                                    else
-                                    {
-                                        data2[boolvalue.ColumnName] = "0";
-                                    }
+                                    data2[boolvalue.ColumnName] = value.ToLower() == boolvalue.True.ToLower() ? "1" : "0";
                                 }
                             }
-                        }
-                        else
-                        {
-                            data2[boolvalue.ColumnName] = "0";
+                            else
+                            {
+                                data2[boolvalue.ColumnName] = "0";
+                            }
                         }
                     }
                 }
+
+                // Exclude the identity column from the data dictionary
+                var dataWithoutIdentity = data2.Where(kvp => !kvp.Key.Equals(identityColumnName, StringComparison.OrdinalIgnoreCase))
+                                               .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                // Log the data without identity column
+                Console.WriteLine("Data without identity column:");
+                foreach (var kvp in dataWithoutIdentity)
+                {
+                    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+                }
+
                 try
                 {
-                    string connectionString = BuildConnectionString(connectionDTO) + ";Include Error Detail=true";
+                    string connectionString = BuildConnectionString(connectionDTO);
 
-                    using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                    using (SqlConnection connection = new SqlConnection(connectionString))
                     {
+                        await connection.OpenAsync();
 
-                        connection.Open();
-
-                        using (NpgsqlCommand cmd = new NpgsqlCommand())
+                        using (SqlCommand cmd = new SqlCommand())
                         {
                             cmd.Connection = connection;
-                            // Build the INSERT statement
 
-                            string columns2 = string.Join(", ", data2.Keys.Select(k => $"\"{k}\"")); // Use double quotes for case-sensitive column names
+                            string columns = string.Join(", ", dataWithoutIdentity.Keys.Select(k => $"[{k}]")); // Use square brackets for column names
+                            string values = string.Join(", ", dataWithoutIdentity.Values.Select(v => $"'{v}'")); // Wrap values in single quotes for strings
 
-                            string values = string.Join(", ", data2.Values.Select(v => $"'{v}'")); // Wrap values in single quotes for strings
+                            string query = $"INSERT INTO [{tablename}] ({columns}) VALUES ({values})"; // Use square brackets for table name
 
-                            string query = $"INSERT INTO \"{tablename}\" ({columns2}) VALUES ({values})"; // Use double quotes for case-sensitive table name
+                            // Log the query
+                            Console.WriteLine($"Query: {query}");
 
                             cmd.CommandText = query;
-
-                            cmd.ExecuteNonQuery();
-
-                            dataToRemove.Add(data2);
-
+                            await cmd.ExecuteNonQueryAsync();
                         }
-                        connection.Close();
+                        await connection.CloseAsync();
                     }
+                }
+                catch (SqlException sqlEx)
+                {
+                    throw new Exception($"SQL Error: {sqlEx.Message}", sqlEx);
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(ex.ToString());
+                    throw new Exception($"General Error: {ex.Message}", ex);
                 }
             }
             return true;
         }
+
 
         //Check table exists
         public async Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName)
@@ -391,13 +424,23 @@ namespace ClientSchemaHub.Service
                 {
                     throw new InvalidOperationException("Connection string not found in the session.");
                 }
-                using (var dbConnection = new NpgsqlConnection(connectionString))
+                using (var dbConnection = new SqlConnection(connectionString))
                 {
                     // Open the connection
                     dbConnection.Open();
 
                     // Use Dapper to execute a parameterized query to check if the table exists
-                    string query = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = @TableName)";
+                    string query = @"
+                SELECT CASE 
+                    WHEN EXISTS (
+                        SELECT 1 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_NAME = @TableName
+                    ) 
+                    THEN 1 
+                    ELSE 0 
+                END";
+
                     bool tableExists = dbConnection.QueryFirstOrDefault<bool>(query, new { TableName = tableName });
 
                     return tableExists;
@@ -409,7 +452,7 @@ namespace ClientSchemaHub.Service
             }
         }
 
-        //Get Table datas
+        // Get Table data
         public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
         {
             string connectionString = BuildConnectionString(dBConnection);
@@ -419,26 +462,29 @@ namespace ClientSchemaHub.Service
                 throw new InvalidOperationException("Connection string not found in the session.");
             }
 
-            using (IDbConnection dbConnection = new NpgsqlConnection(connectionString))
+            using (IDbConnection dbConnection = new SqlConnection(connectionString))
             {
                 dbConnection.Open();
 
-                // Dynamically query the table based on the provided table name and EntityColumnName
-                string rowDataQuery = $"SELECT * FROM public.\"{tableName}\"";
+                // Dynamically query the table based on the provided table name
+                string rowDataQuery = $"SELECT * FROM [{tableName}]";  // SQL Server compatible query
 
                 // Use Dapper to execute the query and return the results
-                var rows = dbConnection.Query(rowDataQuery).ToList();
+                var rows = (await dbConnection.QueryAsync<dynamic>(rowDataQuery)).ToList();
 
                 return rows;
             }
         }
+
 
         // Build Connection string
         private string BuildConnectionString(DBConnectionDTO connectionDTO)
         {
             // Build and return the connection string based on the DTO properties
             // This is just a simple example; in a real-world scenario, you would want to handle this more securely
-            return $"Host={connectionDTO.HostName};Database={connectionDTO.DataBase};Username={connectionDTO.UserName};Password={connectionDTO.Password}";
+            return $"Server={connectionDTO.HostName};Database={connectionDTO.DataBase};User Id={connectionDTO.UserName};Password={connectionDTO.Password};TrustServerCertificate=true";
         }
     }
 }
+
+
