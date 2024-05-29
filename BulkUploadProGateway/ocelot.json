@@ -1,0 +1,605 @@
+﻿{
+  "Routes": [
+    //==>AuthCraftHub
+    //login
+    {
+      "DownstreamPathTemplate": "/api/Auth/login",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/login",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //createUser
+    {                                
+      "DownstreamPathTemplate": "/api/Auth/createUser?ID",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/createUser",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //GetUsers
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetUsers",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/GetUsers",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetUsersbyId               
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetUserbyId?Id={id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/GetUserbyId?Id={id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+
+    //GetUserbyroleId    
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetUserbyRoleId?Roleid={Id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/GetUserbyRoleId?Roleid={Id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetUserbyEmail              
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetUserbyEmail?email={Email}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/GetUserbyEmail?email={Email}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //UpdateUserbyId
+    {
+      "DownstreamPathTemplate": "/api/Auth/UpdateUserbyId",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/UpdateUserbyId",
+      "UpstreamHttpMethod": [ "Put" ]
+    },
+    //getRoles
+    {
+      "DownstreamPathTemplate": "/api/Auth/getRoles",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/getRoles",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //getRoleById
+    {
+      "DownstreamPathTemplate": "/api/Auth/getRoleById?roleID={RoleId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/getRoleById?roleID={RoleId}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //createNewRole
+    {
+      "DownstreamPathTemplate": "/api/Auth/createNewRole?RoleName={roleName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/createNewRole?{RoleName}",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //UpdateRoleById
+    {
+      "DownstreamPathTemplate": "/api/Auth/UpdateRoleById/roleId",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/UpdateRoleById/roleId",
+      "UpstreamHttpMethod": [ "Put" ]
+    },
+
+    //getScreens
+    {
+      "DownstreamPathTemplate": "/api/Auth/getScreens",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/getScreens",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //getScreenById
+    {
+      "DownstreamPathTemplate": "/api/Auth/getScreenById?ScreenID={Id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/getScreenById?ScreenID={Id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //createNewScreen
+    {
+      "DownstreamPathTemplate": "/api/Auth/createNewScreen/id={id}/ScreenName={screenName}/RouteURL={routeURL}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/createNewScreen/id={id}/ScreenName={screenName}/RouteURL={routeURL}",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //UpdateScreenById
+    {
+      "DownstreamPathTemplate": "/api/Auth/UpdateScreenById?ScreenID={ScreenID}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/UpdateScreenById?ScreenID={ScreenID}",
+      "UpstreamHttpMethod": [ "Put" ]
+    },
+
+    //GetRoleScreens
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetRoleScreens",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/GetRoleScreens",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetRoleScreenByMapId
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetRoleScreenByMapId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/Auth/GetRoleScreenByMapId/{id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+    //GetRoleScreenByRoleId
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetRoleScreenByRoleId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/GetRoleScreenByRoleId/{id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetRoleScreenByScreenId
+    {
+      "DownstreamPathTemplate": "/api/Auth/GetRoleScreenByScreenId/{Id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/GetRoleScreenByScreenId/{Id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //CreateRoleScreen
+    {
+      "DownstreamPathTemplate": "/api/Auth/CreateRoleScreen?Id={id}&RoleId={roleId}&ScreenId={screenId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/CreateRoleScreen?Id={id}&RoleId={roleId}&ScreenId={screenId}",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //UpdateRoleScreenById
+    {
+      "DownstreamPathTemplate": "/api/Auth/UpdateRoleScreenById",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7139
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/UpdateRoleScreenById",
+      "UpstreamHttpMethod": [ "Put" ]
+    },
+
+    //==>ClientSchemaHub
+    //GetTableDetails
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/GetTableDetails?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/EntityMigrate/GetTableDetails?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //CreateTable
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/CreateTable?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&query={query}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/EntityMigrate/CreateTable?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&query={query}",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //InsertData
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/InsertData?ConnectionDTO={ConnectionDTO}&ConvertedDataList={ConvertedDataList}&BooleanColumns={BooleanColumns}&TableName={TableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/EntityMigrate/InsertData?ConnectionDTO={ConnectionDTO}&ConvertedDataList={ConvertedDataList}&BooleanColumns={BooleanColumns}&TableName={TableName}",
+      "UpstreamHttpMethod": [ "Post" ]
+    },
+
+    //IsTableExists
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/IsTableExists?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+                               //EntityMigrate/IsTableExists?Provider=postgresql&HostName=localhost&DataBase=Gateway&UserName=postgres&Password=Prags%403109&tableName=UserEntity
+      "UpstreamPathTemplate": "/EntityMigrate/IsTableExists?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetTabledata
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/GetTabledata?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/EntityMigrate/GetTabledata?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //GetPrimaryColumnData
+    {
+      "DownstreamPathTemplate": "/EntityMigrate/GetPrimaryColumnData?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/EntityMigrate/GetPrimaryColumnData?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}&tableName={tableName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+
+    //==>SchemaCraftHub
+    //tables
+    {
+      "DownstreamPathTemplate": "/EntitySchema/tables",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/tables",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //tables/{id}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/tables/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/tables/{id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //tables/{hostName}/{provider}/{databaseName}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/tables?hostName={hostName}&provider={provider}&databaseName={databaseName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/tables?hostName={hostName}&provider={provider}&databaseName={databaseName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //tables/{hostName}/{provider}/{databaseName}/{tableName}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/tables?hostName={hostName}&provider={provider}&databaseName={databaseName}&tableName={tableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/tables?hostName={hostName}&provider={provider}&databaseName={databaseName}&tableName={tableName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //columns
+    {
+      "DownstreamPathTemplate": "/EntitySchema/columns",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/columns",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //columns/{id}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/columns/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/columns/{id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //columns/{id}/{entityid}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/columns/{id}/{entityid}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/columns/{id}/{entityid}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //columns/entity/{entityId}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/columns/entity/{entityId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/columns/entity/{entityId}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // createtables
+
+    //cliententity                  
+
+    {
+      "DownstreamPathTemplate": "/EntitySchema/cliententity?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/cliententity?Provider={Provider}&HostName={HostName}&DataBase={DataBase}&UserName={UserName}&Password={Password}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // columns/{hostName}/{provider}/{databaseName}/{tableName}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/columns?hostName={hostName}&provider={provider}&databaseName={databaseName}&tableName={tableName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/columns?hostName={hostName}&provider={provider}&databaseName={databaseName}&tableName={tableName}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // log/{logParentId}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/log?logParentId={Id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/log?logParentId={Id}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // log/child/{logChildId}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/log/child?logChildId={Id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/log/child?logChildId={logChildId}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // logs
+    {
+      "DownstreamPathTemplate": "/EntitySchema/logs",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/logs",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    // logs/user/{userId}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/logs/user/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/logs/user/{userId}",
+      "UpstreamHttpMethod": [ "Get" ]
+    },
+
+    //logs/entity/{entityId}
+    {
+      "DownstreamPathTemplate": "/EntitySchema/logs/entity?entityId={entityId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7046
+        }
+      ],
+      "UpstreamPathTemplate": "/EntitySchema/logs/entity?entityId={entityId}",
+      "UpstreamHttpMethod": [ "Get" ]
+    }
+
+  ],
+
+  //"GlobalConfiguration": {
+  //  "BaseUrl": "http://localhost:7139"
+  //}
+}
+
+

@@ -1,23 +1,20 @@
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Configuration.AddJsonFile("ocelot.json");
+
+
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddCors(c =>
-{
-    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyMethod()
-     .AllowAnyHeader());
-});
-
+builder.Services.AddOcelot();
 
 var app = builder.Build();
 
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -26,8 +23,24 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseOcelot().Wait();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+//using Ocelot.DependencyInjection;
+//using Ocelot.Middleware;
+
+//var builder = WebApplication.CreateBuilder(args);
+//builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
+//    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+//    .AddEnvironmentVariables();
+//builder.Services.AddOcelot(builder.Configuration);
+
+//var app = builder.Build();
+//app.UseOcelot().Wait();
+//app.Run();
+
