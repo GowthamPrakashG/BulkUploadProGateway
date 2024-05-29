@@ -7,8 +7,45 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="obj\Debug\net7.0\.NETCoreApp,Version=v7.0.AssemblyAttributes.cs" />
+    <Compile Include="obj\Debug\net7.0\SchemaCraftHub.AssemblyInfo.cs" />
+    <Compile Include="obj\Debug\net7.0\SchemaCraftHub.GlobalUsings.g.cs" />
+    <Compile Include="obj\Debug\net7.0\SchemaCraftHub.MvcApplicationPartsAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="obj\Debug\net7.0\SchemaCraftHub.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\net7.0\SchemaCraftHub.sourcelink.json" />
+    <Content Include="obj\Debug\net7.0\staticwebassets.build.json" />
+    <Content Include="obj\project.assets.json" />
+    <Content Include="obj\SchemaCraftHub.csproj.nuget.dgspec.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="obj\Debug\net7.0\apphost.exe" />
+    <None Include="obj\Debug\net7.0\refint\SchemaCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\ref\SchemaCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\SchemaCr.FDF7D9C9.Up2Date" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.AssemblyInfoInputs.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.assets.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.csproj.AssemblyReference.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.csproj.BuildWithSkipAnalyzers" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.csproj.CoreCompileInputs.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.GeneratedMSBuildEditorConfig.editorconfig" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.genruntimeconfig.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.MvcApplicationPartsAssemblyInfo.cache" />
+    <None Include="obj\Debug\net7.0\SchemaCraftHub.pdb" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.build.SchemaCraftHub.props" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.buildMultiTargeting.SchemaCraftHub.props" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.buildTransitive.SchemaCraftHub.props" />
+    <None Include="obj\project.nuget.cache" />
+    <None Include="obj\SchemaCraftHub.csproj.nuget.g.props" />
+    <None Include="obj\SchemaCraftHub.csproj.nuget.g.targets" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.19" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql" Version="7.0.4" />
 	

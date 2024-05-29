@@ -7,8 +7,45 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="obj\Debug\net7.0\.NETCoreApp,Version=v7.0.AssemblyAttributes.cs" />
+    <Compile Include="obj\Debug\net7.0\AuthCraftHub.AssemblyInfo.cs" />
+    <Compile Include="obj\Debug\net7.0\AuthCraftHub.GlobalUsings.g.cs" />
+    <Compile Include="obj\Debug\net7.0\AuthCraftHub.MvcApplicationPartsAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="obj\AuthCraftHub.csproj.nuget.dgspec.json" />
+    <Content Include="obj\Debug\net7.0\AuthCraftHub.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\net7.0\AuthCraftHub.sourcelink.json" />
+    <Content Include="obj\Debug\net7.0\staticwebassets.build.json" />
+    <Content Include="obj\project.assets.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="obj\AuthCraftHub.csproj.nuget.g.props" />
+    <None Include="obj\AuthCraftHub.csproj.nuget.g.targets" />
+    <None Include="obj\Debug\net7.0\apphost.exe" />
+    <None Include="obj\Debug\net7.0\AuthCraf.AFA8BB81.Up2Date" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.AssemblyInfoInputs.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.assets.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.csproj.AssemblyReference.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.csproj.BuildWithSkipAnalyzers" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.csproj.CoreCompileInputs.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.GeneratedMSBuildEditorConfig.editorconfig" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.genruntimeconfig.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.MvcApplicationPartsAssemblyInfo.cache" />
+    <None Include="obj\Debug\net7.0\AuthCraftHub.pdb" />
+    <None Include="obj\Debug\net7.0\refint\AuthCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\ref\AuthCraftHub.dll" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.build.AuthCraftHub.props" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.buildMultiTargeting.AuthCraftHub.props" />
+    <None Include="obj\Debug\net7.0\staticwebassets\msbuild.buildTransitive.AuthCraftHub.props" />
+    <None Include="obj\project.nuget.cache" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.19" />
     <PackageReference Include="Npgsql" Version="7.0.4" />
 	  
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
