@@ -22,5 +22,6 @@
         public string? DefaultValue { get; set; }
         public string? True { get; set; }
         public string? False { get; set; }
+        public int Index { get; set; }
     }
 }

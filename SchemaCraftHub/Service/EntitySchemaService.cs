@@ -126,47 +126,74 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<ColumnDTO>> GetAllColumnsAsync()
+
+
+        public async Task<List<ColumnDTO>> GetAllColumnsAsync()  //reworked
         {
             try
             {
+                // Retrieve all columns from the database
                 var columns = await _context.ColumnMetaDataEntity.ToListAsync();
 
-                var columnDTOs = columns.Select(column => new Model.DTO.ColumnDTO
+                // Dictionary to hold the reference column IDs for foreign keys
+                var referenceColumnIds = new Dictionary<int, int>();
+
+                // Fetch the reference column IDs for the columns where IsForeignKey is true
+                foreach (var column in columns.Where(c => c.IsForeignKey))
                 {
-                    Id = column.Id,
-                    ColumnName = column.ColumnName,
-                    Datatype = column.Datatype,
-                    IsPrimaryKey = column.IsPrimaryKey,
-                    IsForeignKey = column.IsForeignKey,
-                    EntityId = column.EntityId,
-                    ReferenceEntityID = column.ReferenceEntityID,
-                    ReferenceColumnID = column.ReferenceColumnID,
-                    Length = column.Length,
-                    MinLength = column.MinLength,
-                    MaxLength = column.MaxLength,
-                    MaxRange = column.MaxRange,
-                    MinRange = column.MinRange,
-                    DateMinValue = column.DateMinValue,
-                    DateMaxValue = column.DateMaxValue,
-                    Description = column.Description,
-                    IsNullable = column.IsNullable,
-                    DefaultValue = column.DefaultValue,
-                    True = column.True,
-                    False = column.False,
-                    // Include other properties as needed
-                }).ToList();
+                    var referenceColumn = await _context.ColumnMetaDataEntity
+                        .FirstOrDefaultAsync(c => c.EntityId == column.ReferenceEntityID && c.IsPrimaryKey);
 
+                    if (referenceColumn != null)
+                    {
+                        referenceColumnIds[column.Id] = referenceColumn.Id; // Map the reference column ID
+                    }
+                }
 
+                // Create a list to hold DTOs to be returned
+                var columnDTOs = new List<ColumnDTO>();
+
+                // Process each column
+                foreach (var column in columns)
+                {
+                    // Create DTO and map values
+                    var dto = new ColumnDTO
+                    {
+                        Id = column.Id,
+                        ColumnName = column.ColumnName,
+                        Datatype = column.Datatype,
+                        IsPrimaryKey = column.IsPrimaryKey,
+                        IsForeignKey = column.IsForeignKey,
+                        EntityId = column.EntityId,
+                        ReferenceEntityID = column.ReferenceEntityID,
+                        ReferenceColumnID = column.IsForeignKey && referenceColumnIds.ContainsKey(column.Id)
+                            ? referenceColumnIds[column.Id]
+                            : column.ReferenceColumnID, // Fallback to database value if not found in referenceColumnIds
+                                                        // Other properties...
+                    };
+
+                    // Log mapped DTO
+                 //   Console.WriteLine($"Mapped DTO - ID: {dto.Id}, ReferenceColumnID: {dto.ReferenceColumnID}");
+
+                    // Add DTO to the list
+                    columnDTOs.Add(dto);
+                }
+
+                // Log all DTOs created
+                foreach (var dto in columnDTOs)
+                {
+                    Console.WriteLine($"DTO Created - ID: {dto.Id}, ReferenceColumnID: {dto.ReferenceColumnID}");
+                }
+
+                // Return DTOs
                 return columnDTOs;
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+                throw new ApplicationException("An error occurred while fetching all columns.", ex);
             }
-        }
-
-        public async Task<ColumnDTO> GetColumnByIdAsync(int id)
+        }  
+        public async Task<ColumnDTO> GetColumnByIdAsync(int id)      //reworked
         {
             try
             {
@@ -178,6 +205,19 @@ namespace SchemaCraftHub.Service
                     return null;
                 }
 
+                int? referenceColumnId = null;
+
+                if (column.IsForeignKey)
+                {
+                    var referenceColumn = await _context.ColumnMetaDataEntity
+                        .FirstOrDefaultAsync(x => x.EntityId == column.ReferenceEntityID && x.IsPrimaryKey);
+
+                    if (referenceColumn != null)
+                    {
+                        referenceColumnId = referenceColumn.Id;
+                    }
+                }
+
                 var columnDTO = new Model.DTO.ColumnDTO
                 {
                     Id = column.Id,
@@ -187,7 +227,7 @@ namespace SchemaCraftHub.Service
                     IsForeignKey = column.IsForeignKey,
                     EntityId = column.EntityId,
                     ReferenceEntityID = column.ReferenceEntityID,
-                    ReferenceColumnID = column.ReferenceColumnID,
+                    ReferenceColumnID = referenceColumnId,
                     Length = column.Length,
                     MinLength = column.MinLength,
                     MaxLength = column.MaxLength,
@@ -206,20 +246,35 @@ namespace SchemaCraftHub.Service
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+                // Log the exception (if logging is set up in your project)
+                Console.WriteLine($"Error: {ex.Message}");
+                throw new ApplicationException("An error occurred while fetching the column.", ex);
             }
         }
 
-        public async Task<ColumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)
+        public async Task<ColumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId)  //reworked
         {
             try
             {
-                var column = await _context.ColumnMetaDataEntity.FirstOrDefaultAsync(x => x.Id == id && x.EntityId == entityId);
+                var column = await _context.ColumnMetaDataEntity
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EntityId == entityId);
 
                 if (column == null)
                 {
                     // Handle the case where the column with the given ID is not found
                     return null;
+                }
+
+                // If ReferenceColumnID is null and ReferenceEntityID is not null, fetch the primary key of the related entity
+                if (column.ReferenceColumnID == null && column.ReferenceEntityID != null)
+                {
+                    var referenceColumn = await _context.ColumnMetaDataEntity
+                        .FirstOrDefaultAsync(x => x.EntityId == column.ReferenceEntityID && x.IsPrimaryKey);
+
+                    if (referenceColumn != null)
+                    {
+                        column.ReferenceColumnID = referenceColumn.Id;
+                    }
                 }
 
                 var columnDTO = new Model.DTO.ColumnDTO
@@ -250,17 +305,29 @@ namespace SchemaCraftHub.Service
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+                throw new ApplicationException("An error occurred while fetching the column.", ex);
             }
         }
 
-        public async Task<List<ColumnDTO>> GetColumnsByEntityIdAsync(int entityId)
+
+        public async Task<List<ColumnDTO>> GetColumnsByEntityIdAsync(int entityId)  //reworked
         {
             try
             {
                 var columns = await _context.ColumnMetaDataEntity
                     .Where(column => column.EntityId == entityId)
                     .ToListAsync();
+
+                // Fetch reference columns for columns that are foreign keys
+                var foreignKeyColumns = columns.Where(column => column.IsForeignKey).ToList();
+                var referenceColumnTasks = foreignKeyColumns.Select(async column =>
+                {
+                    var referenceColumn = await _context.ColumnMetaDataEntity
+                        .FirstOrDefaultAsync(x => x.EntityId == column.ReferenceEntityID && x.IsPrimaryKey);
+                    column.ReferenceColumnID = referenceColumn?.Id;
+                });
+
+                await Task.WhenAll(referenceColumnTasks);
 
                 var columnDTOs = columns.Select(column => new Model.DTO.ColumnDTO
                 {
@@ -291,9 +358,13 @@ namespace SchemaCraftHub.Service
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+                throw new ApplicationException("An error occurred while fetching columns by entity ID.", ex);
             }
         }
+
+
+
+
 
         public async Task<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1, DBConnectionDTO connectionDTO)
         {
@@ -325,6 +396,7 @@ namespace SchemaCraftHub.Service
                             }
                         }
 
+
                         foreach (var tabledetailsDTO in tableDetailsDict)
                         {
                             foreach (var table in tabledetailsDTO.Value)
@@ -334,66 +406,61 @@ namespace SchemaCraftHub.Service
                                 if (table_exists != null)
                                 {
                                     var insertcolumnEntities = new List<ColumnDTO>();
-
                                     var updatecolumnEntities = new List<ColumnDTO>();
 
                                     foreach (var columnDTO in table.Columns)
                                     {
                                         var columns = await GetColumnsByEntityIdAsync(table_exists.Id);
-
                                         var column_exists = columns.FirstOrDefault(x => x.ColumnName.ToLower() == columnDTO.ColumnName.ToLower());
+
+                                        var EntityId = table_exists.Id;
+                                        Nullable<int> ReferenceEntityID = null;
+                                        Nullable<int> ReferenceColumnID = null;
+
+                                        if (columnDTO.HasForeignKey)
+                                        {
+                                            var referenceTable = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable);
+                                            if (referenceTable != null)
+                                            {
+                                                ReferenceEntityID = referenceTable.Id;
+                                                var referenceColumns = await GetColumnsByEntityIdAsync(referenceTable.Id);
+                                                var referenceColumn = referenceColumns.FirstOrDefault(x => x.ColumnName.ToLower() == columnDTO.ReferencedColumn.ToLower());
+                                                if (referenceColumn != null)
+                                                {
+                                                    ReferenceColumnID = referenceColumn.Id;
+                                                }
+                                            }
+                                        }
+
+                                        var columnEntity = new ColumnDTO
+                                        {
+                                            Id = column_exists?.Id ?? 0,
+                                            ColumnName = columnDTO.ColumnName,
+                                            Datatype = columnDTO.DataType,
+                                            IsPrimaryKey = columnDTO.IsPrimaryKey,
+                                            IsForeignKey = columnDTO.HasForeignKey,
+                                            EntityId = EntityId,
+                                            ReferenceEntityID = ReferenceEntityID,
+                                            ReferenceColumnID = ReferenceColumnID,
+                                            IsNullable = columnDTO.IsNullable,
+                                            // Map other properties from ColumnDetailsDTO as needed
+                                        };
 
                                         if (column_exists == null)
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
-                                            Nullable<int> ReferenceEntityID = null;
-                                            if (columnDTO.HasForeignKey)
-                                            {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
-                                            }
-                                            var columnEntity = new ColumnDTO
-                                            {
-                                                ColumnName = columnDTO.ColumnName,
-                                                Datatype = columnDTO.DataType,
-                                                IsPrimaryKey = columnDTO.IsPrimaryKey,
-                                                IsForeignKey = columnDTO.HasForeignKey,
-                                                EntityId = EntityId,
-                                                ReferenceEntityID = ReferenceEntityID,
-                                                IsNullable = columnDTO.IsNullable,
-                                                // Map other properties from ColumnDetailsDTO as needed
-                                            };
-
                                             insertcolumnEntities.Add(columnEntity);
                                         }
                                         else
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
-                                            Nullable<int> ReferenceEntityID = null;
-                                            if (columnDTO.HasForeignKey)
-                                            {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
-                                            }
-                                            var columnEntity = new ColumnDTO
-                                            {
-                                                Id = column_exists.Id,
-                                                ColumnName = columnDTO.ColumnName,
-                                                Datatype = columnDTO.DataType,
-                                                IsPrimaryKey = columnDTO.IsPrimaryKey,
-                                                IsForeignKey = columnDTO.HasForeignKey,
-                                                EntityId = EntityId,
-                                                ReferenceEntityID = ReferenceEntityID,
-                                                IsNullable = columnDTO.IsNullable,
-                                                // Map other properties from ColumnDetailsDTO as needed
-                                            };
-
                                             updatecolumnEntities.Add(columnEntity);
                                         }
                                     }
-                                    if(insertcolumnEntities.Count > 0)
+
+                                    if (insertcolumnEntities.Count > 0)
                                     {
                                         await InsertColumnsAsync(insertcolumnEntities);
                                     }
-                                    if(updatecolumnEntities.Count > 0)
+                                    if (updatecolumnEntities.Count > 0)
                                     {
                                         await UpdateColumnsAsync(updatecolumnEntities);
                                     }
@@ -401,7 +468,9 @@ namespace SchemaCraftHub.Service
                             }
                         }
 
+
                         return tableDetailsDict;
+
                     }
                     catch (JsonException)
                     {

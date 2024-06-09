@@ -327,7 +327,7 @@ namespace ClientSchemaHub.Service
         //Insert data
         public async Task<bool> Insertdata(DBConnectionDTO connectionDTO, List<Dictionary<string, string>>? convertedDataList, List<ColumnMetaDataDTO>? booleancolumns, string tablename)
         {
-            string identityColumnName = "StudentId"; // Replace "StudentId" with your actual identity column name
+            string identityColumnName = "Id"; // Replace "StudentId" with your actual identity column name
 
             if (convertedDataList == null || convertedDataList.Count == 0)
             {

@@ -14,6 +14,7 @@ using Spire.Xls.Core;
 using System.Net;
 
 
+
 namespace ExcelSyncHub.Service
 {
     public class ExcelService : IExcelService
@@ -50,7 +51,6 @@ namespace ExcelSyncHub.Service
             worksheet.Range["A2"].Text = "SI.No";
             worksheet.Range["B2"].Text = "Data Item";
             worksheet.Range["C2"].Text = "Data Type";
-            //worksheet.Range["D2"].Text = "Length";
             worksheet.Range["D2"].Text = "MinLength";
             worksheet.Range["E2"].Text = "MaxLength";
             worksheet.Range["F2"].Text = "MinRange";
@@ -73,17 +73,17 @@ namespace ExcelSyncHub.Service
                 range.Style.Color = (row % 2 == 0) ? Color.LightBlue : Color.Azure;
 
                 SetCellText(worksheet, i + 3, 1, (i + 1).ToString());
-                SetCellText(worksheet, i + 3, 2, column.ColumnName);
-                SetCellText(worksheet, i + 3, 3, column.Datatype);
+                SetCellText(worksheet, i + 3, 2, column.ColumnName ?? string.Empty);
+                SetCellText(worksheet, i + 3, 3, column.Datatype ?? string.Empty);
                 SetCellText(worksheet, i + 3, 4, column.MinLength?.ToString() ?? string.Empty);
-                SetCellText(worksheet, i + 3, 5, (column.MaxLength > 0) ? column.MaxLength.ToString() : string.Empty);
+                SetCellText(worksheet, i + 3, 5, column.MaxLength?.ToString() ?? string.Empty);
                 SetCellText(worksheet, i + 3, 6, column.MinRange?.ToString() ?? string.Empty);
-                SetCellText(worksheet, i + 3, 7, (column.MaxRange > 0) ? column.MaxRange.ToString() : string.Empty);
+                SetCellText(worksheet, i + 3, 7, column.MaxRange?.ToString() ?? string.Empty);
                 SetCellText(worksheet, i + 3, 8, column.DateMinValue ?? string.Empty);
                 SetCellText(worksheet, i + 3, 9, column.DateMaxValue ?? string.Empty);
                 SetCellText(worksheet, i + 3, 10, column.Description ?? string.Empty);
                 worksheet.Range[i + 3, 11].Text = column.IsNullable.ToString();
-                SetCellText(worksheet, i + 3, 12, (column.Datatype.ToLower() == "boolean") ? (string.IsNullOrEmpty(column.DefaultValue) ? string.Empty : ((column.DefaultValue.ToLower() == "true") ? column.True : column.False)) : column.DefaultValue);
+                SetCellText(worksheet, i + 3, 12, column.Datatype != null && column.Datatype.ToLower() == "boolean" ? (string.IsNullOrEmpty(column.DefaultValue) ? string.Empty : (column.DefaultValue.ToLower() == "true" ? column.True : column.False)) : column.DefaultValue ?? string.Empty);
                 worksheet.Range[i + 3, 13].Text = column.IsPrimaryKey.ToString();
                 SetCellText(worksheet, i + 3, 14, column.True ?? string.Empty);
                 SetCellText(worksheet, i + 3, 15, column.False ?? string.Empty);
@@ -115,6 +115,7 @@ namespace ExcelSyncHub.Service
             var staticContentRange = worksheet.Range[lastRowIndex + 2, 1, lastRowIndex + 7, 5];
             staticContentRange.Style.FillPattern = ExcelPatternType.Solid;
             staticContentRange.Style.KnownColor = ExcelColors.Yellow;
+
             // Add the second worksheet for column names
             Worksheet columnNamesWorksheet;
 
@@ -127,7 +128,6 @@ namespace ExcelSyncHub.Service
                 columnNamesWorksheet = workbook.Worksheets.Add("Error Records");
             }
 
-            // After adding content to the columns
             // Set a default column width for the "Fill data" worksheet
             columnNamesWorksheet.DefaultColumnWidth = 15; // Set the width in characters (adjust as needed)
             columnNamesWorksheet.DefaultRowHeight = 15;
@@ -136,7 +136,7 @@ namespace ExcelSyncHub.Service
             for (int i = 0; i < columns.Count; i++)
             {
                 var column = columns[i];
-                columnNamesWorksheet.Range[2, i + 1].Text = column.ColumnName;
+                columnNamesWorksheet.Range[2, i + 1].Text = column.ColumnName ?? string.Empty;
                 int entityId = column.EntityId;
                 columnNamesWorksheet.Range["A1"].Text = entityId.ToString();
                 columnNamesWorksheet.Range[2, 1, 2, lastColumnIndex - 1].Style.Color = Color.Blue;
@@ -156,19 +156,100 @@ namespace ExcelSyncHub.Service
                 Worksheet sheetToRemove = workbook.Worksheets[sheetName];
                 if (sheetToRemove != null)
                 {
-                    workbook.Worksheets.Remove(sheetToRemove);
+                    workbook.Worksheets.Remove
+                        (sheetToRemove);
                 }
             }
 
-            AddDataValidation(columnNamesWorksheet, columns, parentId);
+            // Add data from the "Summary" sheet to a new worksheet
+            Worksheet summaryWorksheet = workbook.Worksheets.Add("SummaryData");
 
+            // Set default column width and height for the "SummaryData" worksheet
+            summaryWorksheet.DefaultColumnWidth = 15;
+            summaryWorksheet.DefaultRowHeight = 15;
 
-            using (MemoryStream memoryStream = new MemoryStream())
+            // Add column headers for the "SummaryData" worksheet
+            for (int i = 0; i < columns.Count; i++)
             {
-                workbook.SaveToStream(memoryStream, FileFormat.Version2013);
-                return memoryStream.ToArray();
+                var column = columns[i];
+                summaryWorksheet.Range[2, i + 1].Text = column.ColumnName ?? string.Empty;
+                summaryWorksheet.Range[2, 1, 2, lastColumnIndex - 1].Style.Color = Color.Blue;
+                summaryWorksheet.Range[2, 1, 2, lastColumnIndex - 1].Style.Font.IsBold = true;
+                summaryWorksheet.Range[2, 1, 2, lastColumnIndex - 1].Style.Font.Color = Color.White;
+            }
+
+            // Retrieve and populate the data from the database
+            var summaryData = GetSummaryData(); // Replace with your method to retrieve data
+
+            PopulateSummarySheet(summaryWorksheet, summaryData);
+
+            // Save the workbook to a memory stream and return the byte array
+            using (MemoryStream stream = new MemoryStream())
+            {
+                workbook.SaveToStream(stream, FileFormat.Version2016);
+                return stream.ToArray();
             }
         }
+
+        private void PopulateSummarySheet(Worksheet summarySheet, List<Dictionary<string, object>> data)
+        {
+            int rowIndex = 3; // Start from row 3 to skip headers
+            int lastColumnIndex = summarySheet.Columns.Length;
+
+            foreach (var record in data)
+            {
+                int colIndex = 1; // Start from column 1
+                foreach (var kvp in record)
+                {
+                    if (colIndex > lastColumnIndex)
+                        break; // Break if we exceed the last column index
+
+                    summarySheet.Range[rowIndex, colIndex].Text = kvp.Value?.ToString() ?? string.Empty;
+                    colIndex++;
+                }
+                rowIndex++;
+            }
+        }
+
+
+
+        private List<Dictionary<string, object>> GetSummaryData()
+        {
+            // Implement this method to retrieve data from your database
+            // Example:
+            // return _databaseService.GetSummaryDataForExcel();
+
+            // Dummy data for illustration:
+            return new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
+                {
+                    { "Column1", "Value1" },
+                    { "Column2", "Value2" },
+                    // Add more columns as needed
+                },
+                new Dictionary<string, object>
+                {
+                    { "Column1", "Value3" },
+                    { "Column2", "Value4" },
+                    // Add more columns as needed
+                },
+                // Add more records as needed
+            };
+        }
+
+        private void SetCellText(Worksheet sheet, int row, int column, string text)
+        {
+            sheet.Range[row, column].Text = text;
+        }
+
+
+
+
+        //---------------------------------------------------------------------------------------------------------------------------
+
+
+
 
         // Helper method to set cell text
         private static void SetCellText(IWorksheet worksheet, int row, int col, string value)
@@ -491,6 +572,7 @@ namespace ExcelSyncHub.Service
                     string dataType = columns[col - 1]?.Datatype ?? string.Empty;
                     int length = columns[col - 1]?.Length ?? 0;
                     bool isPrimaryKey = columns[col - 1]?.IsPrimaryKey ?? false;
+                    bool isForeinKey = columns[col - 1 ]?.IsForeignKey ?? false;    //added
                     string truevalue = columns[col - 1]?.True ?? string.Empty;
                     string falsevalue = columns[col - 1]?.False ?? string.Empty;
                     bool isNullable = columns[col - 1]?.IsNullable ?? false;
@@ -776,7 +858,7 @@ namespace ExcelSyncHub.Service
         }
 
         // Export Error Datas
-        private async Task InsertDataIntoExcel(Worksheet columnNamesWorksheet, List<ColumnMetaDataDTO> columns, int? parentId)
+        private async Task InsertDataIntoExcel(Worksheet columnNamesWorksheet, List<ColumnMetaDataDTO> columns, int? parentId)  
         {
             try
             {
