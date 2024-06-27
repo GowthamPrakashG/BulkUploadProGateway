@@ -58,7 +58,7 @@ namespace ExcelSyncHub.Service
             worksheet.Range["H2"].Text = "DateMinValue";
             worksheet.Range["I2"].Text = "DateMaxValue";
             worksheet.Range["J2"].Text = "Description";
-            worksheet.Range["K2"].Text = "Blank Not Allowed";
+            worksheet.Range["K2"].Text = "Blank value Allowed";
             worksheet.Range["L2"].Text = "Default Value";
             worksheet.Range["M2"].Text = "Unique Value";
             worksheet.Range["N2"].Text = "Option1";
@@ -83,7 +83,7 @@ namespace ExcelSyncHub.Service
                 SetCellText(worksheet, i + 3, 9, column.DateMaxValue ?? string.Empty);
                 SetCellText(worksheet, i + 3, 10, column.Description ?? string.Empty);
                 worksheet.Range[i + 3, 11].Text = column.IsNullable.ToString();
-                SetCellText(worksheet, i + 3, 12, (column.Datatype.ToLower() == "boolean") ? (string.IsNullOrEmpty(column.DefaultValue) ? string.Empty : ((column.DefaultValue.ToLower() == "true") ? column.True : column.False)) : column.DefaultValue);
+                SetCellText(worksheet, i + 3, 12, ((column.Datatype.ToLower() == "boolean") || (column.Datatype.ToLower() == "bit")) ? (string.IsNullOrEmpty(column.DefaultValue) ? string.Empty : ((column.DefaultValue.ToLower() == "true") ? column.True : column.False)) : column.DefaultValue);
                 worksheet.Range[i + 3, 13].Text = column.IsPrimaryKey.ToString();
                 SetCellText(worksheet, i + 3, 14, column.True ?? string.Empty);
                 SetCellText(worksheet, i + 3, 15, column.False ?? string.Empty);
@@ -414,7 +414,7 @@ namespace ExcelSyncHub.Service
                         var cellRange = range.Worksheet.Range[range.Row, range.Column];
                         cellRange.NumberFormat = "yyyy-MM-dd";
                     }
-                    else if (dataType.Equals("boolean", StringComparison.OrdinalIgnoreCase))
+                    else if ((dataType.Equals("boolean", StringComparison.OrdinalIgnoreCase)) || (dataType.Equals("bit", StringComparison.OrdinalIgnoreCase)))
                     {
                         if (string.IsNullOrEmpty(truevalue) && string.IsNullOrEmpty(falsevalue))
                         {
@@ -696,7 +696,7 @@ namespace ExcelSyncHub.Service
                         var cellRange = range.Worksheet.Range[range.Row, range.Column];
                         cellRange.NumberFormat = "yyyy-MM-dd";
                     }
-                    else if (dataType.Equals("boolean", StringComparison.OrdinalIgnoreCase))
+                    else if ((dataType.Equals("boolean", StringComparison.OrdinalIgnoreCase)) || (dataType.Equals("bit", StringComparison.OrdinalIgnoreCase)))
                     {
                         if (string.IsNullOrEmpty(truevalue) && string.IsNullOrEmpty(falsevalue))
                         {
@@ -1091,7 +1091,8 @@ namespace ExcelSyncHub.Service
                         string cellData = excelData.Rows[row][col].ToString();
                         ColumnMetaDataDTO columnDTO = columnsDTO[col];
 
-                        if (columnDTO.IsNullable == true && string.IsNullOrEmpty(cellData))
+                        if(columnDTO.IsNullable == false && string.IsNullOrEmpty(cellData))
+                        //if (columnDTO.IsNullable == true && string.IsNullOrEmpty(cellData))
                         {
                             rowValidationFailed = true;
                             badRows.Add(badRow);
@@ -1381,7 +1382,7 @@ namespace ExcelSyncHub.Service
             try
             {
                 var columnProperties = GetColumnsForEntity(tableName).ToList();
-                List<ColumnMetaDataDTO> booleanColumns = columnProperties.Where(c => c.Datatype.ToLower() == "boolean").ToList();
+                List<ColumnMetaDataDTO> booleanColumns = columnProperties.Where(c => c.Datatype.ToLower() == "boolean" || c.Datatype.ToLower() == "bit").ToList();
                 List<ColumnMetaDataDTO> jsonColumns = columnProperties.Where(c => c.Datatype.ToLower() == "jsonb").ToList();
                 List<Dictionary<string, string>> convertedDataList = new List<Dictionary<string, string>>();
 
