@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 
 
+builder.Services.AddScoped<ITimescaleService, TimescaleService>();
 builder.Services.AddScoped<IPostgreSQLService, PostgreSQLService>();
 builder.Services.AddScoped<IMySQLService, MySQLService>();
 builder.Services.AddScoped<IMSSQLService, MSSQLService>();
