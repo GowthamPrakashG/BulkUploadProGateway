@@ -8,11 +8,14 @@ namespace ClientSchemaHub.Service
         private readonly IPostgreSQLService _postgreSQLService;
         private readonly IMySQLService _mySQLService;
         private readonly IMSSQLService _msSQLService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService)
+        private readonly IDynamoDbService _dynamoDbService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, IDynamoDbService dynamoDbService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
+            _dynamoDbService = dynamoDbService;
+            
             // Initialize other database services
         }
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
@@ -30,6 +33,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "MS SQL": // Add MS SQL case
                         return await _msSQLService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
