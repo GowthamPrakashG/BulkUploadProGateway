@@ -195,7 +195,10 @@ namespace ClientSchemaHub.Service
                      //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
                     // Add cases for other database providers
                     case "MS SQL":
-                        return await _msSQLService.GetTabledata(dBConnection, tableName); 
+                        return await _msSQLService.GetTabledata(dBConnection, tableName);
+
+                    //case "Dynamo":
+                    //    return await _dynamoDbService.GetTabledata(dBConnection,tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
