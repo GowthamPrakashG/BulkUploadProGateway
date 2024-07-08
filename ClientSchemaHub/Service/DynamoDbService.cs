@@ -4,7 +4,6 @@ using Amazon.Runtime;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Dapper;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -180,6 +179,45 @@ namespace ClientSchemaHub.Service
             {
                 Console.WriteLine($"Error checking if table exists: {ex.Message}");
                 throw;
+            }
+        }
+
+        // Get PrimaryKey records from the specific table
+        public async Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
+        {
+            try
+            {
+                var dynamoDbClient = GetDynamoDbClient(dBConnection);
+
+                // Describe table to get primary key information
+                var describeTableRequest = new DescribeTableRequest
+                {
+                    TableName = tableName
+                };
+                var describeTableResponse = await dynamoDbClient.DescribeTableAsync(describeTableRequest);
+                var primaryKeySchema = describeTableResponse.Table.KeySchema;
+
+                // Identify the primary key attribute name
+                var primaryKeyName = primaryKeySchema.FirstOrDefault(k => k.KeyType == "HASH")?.AttributeName;
+                if (string.IsNullOrEmpty(primaryKeyName))
+                {
+                    throw new InvalidOperationException($"Table '{tableName}' does not have a primary key.");
+                }
+
+                // Scan the table to get primary key data
+                var scanRequest = new ScanRequest
+                {
+                    TableName = tableName,
+                    ProjectionExpression = primaryKeyName
+                };
+                var scanResponse = await dynamoDbClient.ScanAsync(scanRequest);
+                var primaryKeys = scanResponse.Items.Select(item => item[primaryKeyName].S).ToList();
+
+                return primaryKeys.Cast<object>().ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
             }
         }
     }

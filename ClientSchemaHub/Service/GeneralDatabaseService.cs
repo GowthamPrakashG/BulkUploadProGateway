@@ -100,6 +100,8 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
