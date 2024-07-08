@@ -212,6 +212,7 @@ namespace ClientSchemaHub.Service
                 var scanResponse = await dynamoDbClient.ScanAsync(scanRequest);
                 var primaryKeys = scanResponse.Items.Select(item => item[primaryKeyName].S).ToList();
 
+                // Convert primary keys to objects and return
                 return primaryKeys.Cast<object>().ToList();
             }
             catch (Exception ex)
