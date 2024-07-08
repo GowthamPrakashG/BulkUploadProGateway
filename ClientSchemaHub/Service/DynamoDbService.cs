@@ -4,11 +4,11 @@ using Amazon.Runtime;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Dapper;
-using System;
-using System.Collections.Generic;
+using Npgsql;
+using Spire.Xls;
+using System.Data;
 using System.Data.Common;
-using System.Linq;
-using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ClientSchemaHub.Service
 {
@@ -158,5 +158,28 @@ namespace ClientSchemaHub.Service
 
             return tableDetails;
         }
+
+
+        //public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
+
+        //{
+        //    var regionEndpoint = GetDynamoDbClient(dBConnection);
+
+
+        //    using (IDbConnection dbConnection = new AmazonDynamoDBClient(regionEndpoint))
+        //    {
+        //        dbConnection.Open();
+
+        //        // Dynamically query the table based on the provided table name and EntityColumnName
+        //        string rowDataQuery = $"SELECT * FROM public.\"{tableName}\"";
+
+        //        // Use Dapper to execute the query and return the results
+        //        var rows = dbConnection.ExecuteAsync(rowDataQuery);
+
+        //        return rows;
+        //    }
+
+
+        //}
     }
 }
