@@ -4,6 +4,7 @@ using Amazon.Runtime;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Dapper;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -157,6 +158,29 @@ namespace ClientSchemaHub.Service
             }
 
             return tableDetails;
+        }
+
+        public async Task<bool> IsTableExists(DBConnectionDTO connectionDTO, string tableName)
+        {
+            try
+            {
+                var dynamoDbClient = GetDynamoDbClient(connectionDTO);
+                var request = new DescribeTableRequest
+                {
+                    TableName = tableName
+                };
+                var response = await dynamoDbClient.DescribeTableAsync(request);
+                return response.Table != null;
+            }
+            catch (ResourceNotFoundException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking if table exists: {ex.Message}");
+                throw;
+            }
         }
     }
 }

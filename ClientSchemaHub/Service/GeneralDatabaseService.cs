@@ -169,6 +169,8 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.IsTableExists(dBConnection, tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
