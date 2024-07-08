@@ -3,28 +3,40 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
-using System.Data.Common;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ClientSchemaHub.Service
 {
     public class DynamoDbService : IDynamoDbService
     {
-        public  async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
+        public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
+        {
+            var dynamoDbClient = GetDynamoDbClient(connectionDTO);
+
+            var tableDetails = await GetTableDetailsAsync(dynamoDbClient);
+
+            return tableDetails;
+        }
+
+        private AmazonDynamoDBClient GetDynamoDbClient(DBConnectionDTO connectionDTO)
         {
             var regionEndpoint = Amazon.RegionEndpoint.GetBySystemName(connectionDTO.Region);
             var credentials = new BasicAWSCredentials(connectionDTO.AccessKey, connectionDTO.SecretKey);
             var dynamoDbClient = new AmazonDynamoDBClient(credentials, regionEndpoint);
 
+            return dynamoDbClient;
+        }
+
+        private async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsAsync(AmazonDynamoDBClient dynamoDbClient)
+        {
+            var tableDetails = new Dictionary<string, List<TableDetailsDTO>>();
+
             try
             {
-                DbProviderFactory factory = DbProviderFactories.GetFactory(connectionDTO.Provider);
-
                 var request = new ListTablesRequest();
                 var response = await dynamoDbClient.ListTablesAsync(request);
-
-
-              //  List<string> tableNames = await GetTableNamesAsync(connection);
-
 
                 if (response.TableNames.Count > 0)
                 {
@@ -32,25 +44,24 @@ namespace ClientSchemaHub.Service
                     foreach (var tableName in response.TableNames)
                     {
                         Console.WriteLine(tableName);
+
+                        // Placeholder for retrieving table details
+                        // Add table details logic here
+                        tableDetails[tableName] = new List<TableDetailsDTO>();
                     }
-
-                    return response.TableNames;
-
                 }
                 else
                 {
                     Console.WriteLine("No tables found.");
-                    return new List<string>();
                 }
-
-
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 throw;
             }
-        }
-    }   
-}
 
+            return tableDetails;
+        }
+    }
+}
