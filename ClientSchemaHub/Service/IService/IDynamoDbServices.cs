@@ -5,6 +5,7 @@ namespace ClientSchemaHub.Service.IService
     public interface IDynamoDbService
     {
         public Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO);
+        Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName);
         //public Task<List<string>> GetTableNamesAsync(DBConnectionDTO dBConnection);
 
         //public Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO dBConnection, string tableName);

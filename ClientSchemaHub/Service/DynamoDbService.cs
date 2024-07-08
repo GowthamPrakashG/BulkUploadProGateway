@@ -5,8 +5,8 @@ using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Dapper;
 using Npgsql;
-using Spire.Xls;
-using System.Data;
+using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -159,27 +159,27 @@ namespace ClientSchemaHub.Service
             return tableDetails;
         }
 
-
-        //public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
-
-        //{
-        //    var regionEndpoint = GetDynamoDbClient(dBConnection);
-
-
-        //    using (IDbConnection dbConnection = new AmazonDynamoDBClient(regionEndpoint))
-        //    {
-        //        dbConnection.Open();
-
-        //        // Dynamically query the table based on the provided table name and EntityColumnName
-        //        string rowDataQuery = $"SELECT * FROM public.\"{tableName}\"";
-
-        //        // Use Dapper to execute the query and return the results
-        //        var rows = dbConnection.ExecuteAsync(rowDataQuery);
-
-        //        return rows;
-        //    }
-
-
-        //}
+        public async Task<bool> IsTableExists(DBConnectionDTO connectionDTO, string tableName)
+        {
+            try
+            {
+                var dynamoDbClient = GetDynamoDbClient(connectionDTO);
+                var request = new DescribeTableRequest
+                {
+                    TableName = tableName
+                };
+                var response = await dynamoDbClient.DescribeTableAsync(request);
+                return response.Table != null;
+            }
+            catch (ResourceNotFoundException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking if table exists: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
