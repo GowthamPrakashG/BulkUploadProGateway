@@ -220,5 +220,41 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
+
+        public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
+        {
+
+            try
+            {
+
+                var dynamoDbClient = GetDynamoDbClient(dBConnection);
+
+
+
+                var describeTableRequest = new DescribeTableRequest
+                {
+                    TableName = tableName
+                };
+                var describeTableResponse = await dynamoDbClient.DescribeTableAsync(describeTableRequest);
+
+          //      string Tabledata = $"SELECT * FROM public.\"{tableName}\"";
+
+
+                    var tableData = new List<dynamic>();
+                    foreach (var item in tableName) 
+                    {
+                        tableData.Add(item);
+                    }
+                    return tableData.ToList();
+                
+
+            }
+
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
     }
 }

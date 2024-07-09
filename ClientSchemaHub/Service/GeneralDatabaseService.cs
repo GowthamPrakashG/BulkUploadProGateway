@@ -15,7 +15,7 @@ namespace ClientSchemaHub.Service
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _dynamoDbService = dynamoDbService;
-            
+
             // Initialize other database services
         }
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
@@ -75,7 +75,7 @@ namespace ClientSchemaHub.Service
                     case "postgresql":
                         return await _postgreSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "mysql": // Add the MySQL case
-                        return await _mySQLService.GetTableDetailsAsync(connectionDTO,tableName);
+                        return await _mySQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "MS SQL":
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
@@ -94,7 +94,7 @@ namespace ClientSchemaHub.Service
                 switch (connectionDTO.Provider)
                 {
                     case "postgresql":
-                        return await _postgreSQLService.GetPrimaryColumnDataAsync(connectionDTO , tableName);
+                        return await _postgreSQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "mysql": // Add the MySQL case
                         return await _mySQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     // Add cases for other database providers
@@ -146,7 +146,7 @@ namespace ClientSchemaHub.Service
                     case "mysql": // Add the MySQL case
                         return await _postgreSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);//Change
                     case "MS SQL":
-                        return await _msSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns,tablename);
+                        return await _msSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
                     // Add cases for other database providers
                     default:
                         throw new ArgumentException("Unsupported database provider");
@@ -191,14 +191,14 @@ namespace ClientSchemaHub.Service
                 {
                     case "postgresql":
                         return await _postgreSQLService.GetTabledata(dBConnection, tableName);
-                     //case "mysql": // Add the MySQL case
-                     //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                    //case "mysql": // Add the MySQL case
+                    //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetTabledata(dBConnection, tableName);
 
-                    //case "Dynamo":
-                    //    return await _dynamoDbService.GetTabledata(dBConnection,tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetTabledata(dBConnection,tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

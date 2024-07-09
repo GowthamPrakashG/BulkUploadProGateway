@@ -10,7 +10,7 @@ namespace ClientSchemaHub.Service
     public class PostgreSQLService : IPostgreSQLService
     {
         // Register the Npgsql provider
-        public PostgreSQLService()   
+        public PostgreSQLService()
         {
             DbProviderFactories.RegisterFactory("postgresql", NpgsqlFactory.Instance);
         }
