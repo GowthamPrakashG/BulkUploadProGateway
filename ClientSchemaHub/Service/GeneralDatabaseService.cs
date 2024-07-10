@@ -9,12 +9,15 @@ namespace ClientSchemaHub.Service
         private readonly IMySQLService _mySQLService;
         private readonly IMSSQLService _msSQLService;
         private readonly ITimescaleService _timescaleService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService)
+        private readonly IDynamoDbService _dynamoDbService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _timescaleService = timescaleService;
+            _dynamoDbService = dynamoDbService;
+
             // Initialize other database services
         }
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
@@ -34,6 +37,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "timescale": // Add MS SQL case
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -76,7 +81,7 @@ namespace ClientSchemaHub.Service
                     case "postgresql":
                         return await _postgreSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "mysql": // Add the MySQL case
-                        return await _mySQLService.GetTableDetailsAsync(connectionDTO,tableName);
+                        return await _mySQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "MS SQL":
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "timescale":
@@ -97,7 +102,7 @@ namespace ClientSchemaHub.Service
                 switch (connectionDTO.Provider)
                 {
                     case "postgresql":
-                        return await _postgreSQLService.GetPrimaryColumnDataAsync(connectionDTO , tableName);
+                        return await _postgreSQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "mysql": // Add the MySQL case
                         return await _mySQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     // Add cases for other database providers
@@ -105,6 +110,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "timescale":
                         return await _timescaleService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -151,7 +158,7 @@ namespace ClientSchemaHub.Service
                     case "mysql": // Add the MySQL case
                         return await _postgreSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);//Change
                     case "MS SQL":
-                        return await _msSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns,tablename);
+                        return await _msSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
                     case "timescale":
                         return await _timescaleService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
                     // Add cases for other database providers
@@ -180,6 +187,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.IsTableExists(dBConnection, tableName);
                     case "timescale":
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -198,13 +207,15 @@ namespace ClientSchemaHub.Service
                 {
                     case "postgresql":
                         return await _postgreSQLService.GetTabledata(dBConnection, tableName);
-                     //case "mysql": // Add the MySQL case
-                     //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                    //case "mysql": // Add the MySQL case
+                    //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetTabledata(dBConnection, tableName);
                     case "timescale":
                         return await _timescaleService.GetTabledata(dBConnection, tableName);
+                    case "Dynamo":
+                        return await _dynamoDbService.GetTabledata(dBConnection,tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
