@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 
 // Register database services
+builder.Services.AddScoped<ITimescaleService, TimescaleService>();
 builder.Services.AddScoped<IPostgreSQLService, PostgreSQLService>();
 builder.Services.AddScoped<IMySQLService, MySQLService>();
 builder.Services.AddScoped<IMSSQLService, MSSQLService>();
