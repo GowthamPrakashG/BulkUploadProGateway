@@ -223,38 +223,72 @@ namespace ClientSchemaHub.Service
 
         public async Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName)
         {
+            var dynamoDbClient = GetDynamoDbClient(dBConnection);
+
+            // Scan the DynamoDB table to get all items
+            var scanRequest = new ScanRequest
+            {
+                TableName = tableName
+            };
 
             try
             {
+                var scanResponse = await dynamoDbClient.ScanAsync(scanRequest);
 
-                var dynamoDbClient = GetDynamoDbClient(dBConnection);
+                // Convert DynamoDB items to dynamic objects
+                var rows = scanResponse.Items.Select(ConvertToDynamic).ToList();
 
-
-
-                var describeTableRequest = new DescribeTableRequest
-                {
-                    TableName = tableName
-                };
-                var describeTableResponse = await dynamoDbClient.DescribeTableAsync(describeTableRequest);
-
-          //      string Tabledata = $"SELECT * FROM public.\"{tableName}\"";
-
-
-                    var tableData = new List<dynamic>();
-                    foreach (var item in tableName) 
-                    {
-                        tableData.Add(item);
-                    }
-                    return tableData.ToList();
-                
-
+                return rows;
             }
-
             catch (Exception ex)
             {
-                throw new ArgumentException(ex.Message);
+                throw new ArgumentException($"Error retrieving data from table {tableName}: {ex.Message}");
             }
         }
 
+        // Helper method to convert DynamoDB Document to dynamic object
+        private dynamic ConvertToDynamic(Dictionary<string, AttributeValue> item)
+        {
+            var expandoObj = new System.Dynamic.ExpandoObject() as IDictionary<string, Object>;
+
+            foreach (var kvp in item)
+            {
+                expandoObj.Add(kvp.Key, GetObjectValue(kvp.Value));
+            }
+
+            return expandoObj;
+        }
+
+        // Helper method to convert DynamoDB AttributeValue to .NET object
+        private object GetObjectValue(AttributeValue attributeValue)
+        {
+            if (attributeValue.S != null) return attributeValue.S;
+            if (attributeValue.N != null) return attributeValue.N;
+            if (attributeValue.SS.Count > 0) return attributeValue.SS;
+            if (attributeValue.NS.Count > 0) return attributeValue.NS;
+            if (attributeValue.M.Count > 0)
+            {
+                var dictionary = new Dictionary<string, object>();
+                foreach (var kvp in attributeValue.M)
+                {
+                    dictionary.Add(kvp.Key, GetObjectValue(kvp.Value));
+                }
+                return dictionary;
+            }
+            if (attributeValue.L.Count > 0)
+            {
+                var list = new List<object>();
+                foreach (var val in attributeValue.L)
+                {
+                    list.Add(GetObjectValue(val));
+                }
+                return list;
+            }
+            // Handle other types as needed
+
+            return null; // Default case, should not happen with valid DynamoDB data
+        }
     }
+
 }
+
