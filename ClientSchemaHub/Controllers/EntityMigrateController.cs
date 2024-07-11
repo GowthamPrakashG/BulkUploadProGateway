@@ -27,6 +27,9 @@ namespace ClientSchemaHub.Controllers
                 // Decode URL-encoded strings
                 connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
 
                 // Step 1: Inspect request data
                 // Log or debug the received connectionDto to inspect its content
@@ -34,11 +37,11 @@ namespace ClientSchemaHub.Controllers
 
                 // Step 2: Check for transformation
                 // Check if the HostName property of connectionDto contains any unexpected transformations
-                if (connectionDto.HostName.Contains("\\\\"))
-                {
-                    // Handle transformation (if needed)
-                    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
-                }
+                //if (connectionDto.HostName.Contains("\\\\"))
+                //{
+                //    // Handle transformation (if needed)
+                //    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
+                //}
 
                 // Now the connectionDto is ready to use without unintended transformations
 
@@ -73,6 +76,9 @@ namespace ClientSchemaHub.Controllers
             {
                 connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
 
                 var tabledetails = await _generalDatabaseService.CreateTable(connectionDto, query);
 
@@ -201,6 +207,9 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
                 connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
 
@@ -236,6 +245,9 @@ namespace ClientSchemaHub.Controllers
             {
                 connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
 
                 var tableData = await _generalDatabaseService.GetTabledata(connectionDto, tableName);
 
@@ -269,6 +281,9 @@ namespace ClientSchemaHub.Controllers
             {
                 connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
 
                 var primaryColumnData = await _generalDatabaseService.GetPrimaryColumnDataAsync(connectionDto, tableName);
 
