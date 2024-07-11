@@ -4,6 +4,7 @@ using ClientSchemaHub.Service.IService;
 using System.Net;
 using Swashbuckle.AspNetCore.Annotations;
 using Newtonsoft.Json;
+using System.Web;
 //using System.Web;
 
 namespace ClientSchemaHub.Controllers
@@ -23,17 +24,24 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                // Decode URL-encoded strings
+                connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+
                 // Step 1: Inspect request data
                 // Log or debug the received connectionDto to inspect its content
                 // Example: System.Console.WriteLine("Received connectionDto: " + connectionDto);
 
                 // Step 2: Check for transformation
                 // Check if the HostName property of connectionDto contains any unexpected transformations
-                if (connectionDto.HostName.Contains("\\\\"))
-                {
-                    // Handle transformation (if needed)
-                    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
-                }
+                //if (connectionDto.HostName.Contains("\\\\"))
+                //{
+                //    // Handle transformation (if needed)
+                //    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
+                //}
 
                 // Now the connectionDto is ready to use without unintended transformations
 
@@ -66,6 +74,12 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+
                 var tabledetails = await _generalDatabaseService.CreateTable(connectionDto, query);
 
                 var responseModel = new APIResponse
@@ -98,6 +112,7 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+
                 if (ConnectionDTO == null || TableName == null)
                 {
                     return BadRequest("Missing required parameters.");
@@ -122,6 +137,7 @@ namespace ClientSchemaHub.Controllers
                 DBConnectionDTO connection;
                 try
                 {
+
                     connection = JsonConvert.DeserializeObject<DBConnectionDTO>(decodedConnectionDTO);
                 }
                 catch (JsonReaderException jsonEx)
@@ -191,6 +207,12 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+                connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+
                 var isTableExists = await _generalDatabaseService.IsTableExists(connectionDto, tableName);
 
                 var responseModel = new APIResponse
@@ -221,6 +243,12 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+
                 var tableData = await _generalDatabaseService.GetTabledata(connectionDto, tableName);
 
                 var responseModel = new APIResponse
@@ -251,6 +279,12 @@ namespace ClientSchemaHub.Controllers
         {
             try
             {
+                connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+
                 var primaryColumnData = await _generalDatabaseService.GetPrimaryColumnDataAsync(connectionDto, tableName);
 
                 var responseModel = new APIResponse
