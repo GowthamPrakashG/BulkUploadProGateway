@@ -13,7 +13,7 @@ namespace ClientSchemaHub.Service
         // Register the Npgsql provider
         public TimescaleService()
         {
-            DbProviderFactories.RegisterFactory("timescale", NpgsqlFactory.Instance);
+            DbProviderFactories.RegisterFactory("Timescale", NpgsqlFactory.Instance);
         }
 
 

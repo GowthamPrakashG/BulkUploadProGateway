@@ -35,7 +35,7 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "MS SQL": // Add MS SQL case
                         return await _msSQLService.GetTableDetailsForAllTablesAsync(connectionDTO);
-                    case "timescale": // Add MS SQL case
+                    case "Timescale": // Add MS SQL case
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Dynamo":
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
@@ -61,7 +61,7 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetTableNamesAsync(connectionDTO);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.GetTableNamesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
@@ -84,7 +84,7 @@ namespace ClientSchemaHub.Service
                         return await _mySQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "MS SQL":
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
@@ -108,7 +108,7 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
@@ -135,7 +135,7 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.ConvertAndCallCreateTableModel(connectionDTO, query);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.ConvertAndCallCreateTableModel(connectionDTO, query);
                     default:
                         throw new ArgumentException("Unsupported database provider");
@@ -159,7 +159,7 @@ namespace ClientSchemaHub.Service
                         return await _postgreSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);//Change
                     case "MS SQL":
                         return await _msSQLService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.Insertdata(connectionDTO, convertedDataList, booleancolumns, tablename);
                     // Add cases for other database providers
                     default:
@@ -185,7 +185,7 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.IsTableExists(dBConnection, tableName);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
@@ -212,7 +212,7 @@ namespace ClientSchemaHub.Service
                     // Add cases for other database providers
                     case "MS SQL":
                         return await _msSQLService.GetTabledata(dBConnection, tableName);
-                    case "timescale":
+                    case "Timescale":
                         return await _timescaleService.GetTabledata(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetTabledata(dBConnection,tableName);
