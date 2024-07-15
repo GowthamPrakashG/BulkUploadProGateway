@@ -1,5 +1,6 @@
 ﻿using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace ClientSchemaHub.Service
 {
@@ -225,6 +226,36 @@ namespace ClientSchemaHub.Service
                 throw new ArgumentException(ex.Message);
             }
         }
+
+
+        public async Task<string> ReceiveHashFromPort(DBConnectionDTO dBConnection)
+        {
+            try
+            {
+                switch (dBConnection.Provider)
+                {
+                    case "postgresql":
+                        return await _postgreSQLService.ReceiveHashFromPort(dBConnection);
+                    //case "mysql": // Add the MySQL case
+                    //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                    // Add cases for other database providers
+                    //case "MS SQL":
+                    //    return await _msSQLService.GetTabledata(dBConnection);
+                    //case "Timescale":
+                    //    return await _timescaleService.GetTabledata(dBConnection);
+                    //case "Dynamo":
+                    //    return await _dynamoDbService.GetTabledata(dBConnection);
+                    default:
+                        throw new ArgumentException("Unsupported database provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
+
     }
 
 }

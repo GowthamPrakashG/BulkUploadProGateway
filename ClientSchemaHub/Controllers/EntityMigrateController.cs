@@ -310,5 +310,55 @@ namespace ClientSchemaHub.Controllers
             }
         }
 
+
+        [HttpGet("HashValue")]
+        public async Task<ActionResult<APIResponse>> ReceiveHashFromPort([FromQuery] DBConnectionDTO dBConnection)
+        {
+            try
+            {
+                // Decode URL-encoded strings
+                //connectionDto.HostName = HttpUtility.UrlDecode(connectionDto.HostName);
+                //connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
+                //connectionDto.AccessKey = HttpUtility.UrlDecode(connectionDto.AccessKey);
+                //connectionDto.SecretKey = HttpUtility.UrlDecode(connectionDto.SecretKey);
+                //connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
+
+                // Step 1: Inspect request data
+                // Log or debug the received connectionDto to inspect its content
+                // Example: System.Console.WriteLine("Received connectionDto: " + connectionDto);
+
+                // Step 2: Check for transformation
+                // Check if the HostName property of connectionDto contains any unexpected transformations
+                //if (connectionDto.HostName.Contains("\\\\"))
+                //{
+                //    // Handle transformation (if needed)
+                //    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
+                //}
+
+                // Now the connectionDto is ready to use without unintended transformations
+
+                var tabledetails = await _generalDatabaseService.ReceiveHashFromPort(dBConnection);
+
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = tabledetails
+                };
+                return Ok(responseModel);
+            }
+            catch (Exception ex)
+            {
+                var responseModel = new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    Result = ex.Message
+                };
+                return StatusCode((int)responseModel.StatusCode, responseModel);
+            }
+        }
+
     }
 }
