@@ -32,6 +32,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
+                connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
 
                 // Step 1: Inspect request data
                 // Log or debug the received connectionDto to inspect its content
@@ -83,6 +84,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
+                connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
 
                 var tabledetails = await _generalDatabaseService.CreateTable(connectionDto, query);
 
@@ -218,6 +220,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.DataBase = HttpUtility.UrlDecode(connectionDto.DataBase);
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
+                connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
 
                 var isTableExists = await _generalDatabaseService.IsTableExists(connectionDto, tableName);
 
@@ -256,6 +259,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
+                connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
 
                 var tableData = await _generalDatabaseService.GetTabledata(connectionDto, tableName);
 
@@ -294,6 +298,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Provider = HttpUtility.UrlDecode(connectionDto.Provider);
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
+                connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
 
                 var primaryColumnData = await _generalDatabaseService.GetPrimaryColumnDataAsync(connectionDto, tableName);
 
