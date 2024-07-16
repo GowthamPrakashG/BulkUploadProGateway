@@ -463,7 +463,13 @@ namespace ClientSchemaHub.Service
             string formatdatetimeoffset = dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz");
 
             //string timestampString = "2024-07-10 15:21:05.520756+0530";
-            //string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
+            string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
+            int start = 8;
+            int length = 16;
+
+            string split = hashvalue.Remove(start, length);
+            
+
 
             //DateTimeOffset timestamp = DateTimeOffset.ParseExact(
             //timestampString,
@@ -485,11 +491,18 @@ namespace ClientSchemaHub.Service
 
             string hexValue = BitConverter.ToString(byteArray).Replace("-", string.Empty);
 
+            string finalhashvalue = split.Insert(8, hexValue);
+
             Console.WriteLine($"Timestamp: {formatdatetimeoffset}");
             Console.WriteLine($"Unix Time (Milliseconds): {unixTimeMilliseconds}");
-            Console.WriteLine($"Hex Value: {hexValue}");
 
-            return hexValue;
+            Console.WriteLine($"Hash Value: {hashvalue}");
+            Console.WriteLine($"Removed Hash Value: {split}");
+
+            Console.WriteLine($"Hex Value: {hexValue}");
+            Console.WriteLine($"FinalHash Value: {finalhashvalue}");
+
+            return finalhashvalue;
         }
     }
 }
