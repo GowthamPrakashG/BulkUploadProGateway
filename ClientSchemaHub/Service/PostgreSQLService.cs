@@ -4,6 +4,7 @@ using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Npgsql;
 using System.Data;
+using System.Globalization;
 
 namespace ClientSchemaHub.Service
 {
@@ -453,6 +454,55 @@ namespace ClientSchemaHub.Service
             // Build and return the connection string based on the DTO properties
             // This is just a simple example; in a real-world scenario, you would want to handle this more securely
             return $"Host={connectionDTO.HostName};Database={connectionDTO.DataBase};Username={connectionDTO.UserName};Password={connectionDTO.Password}";
+        }
+
+
+        public async Task<string> ReceiveHashFromPort(DBConnectionDTO connectionDTO)
+        {
+            DateTimeOffset dateTimeOffset = DateTimeOffset.Now;
+            string formatdatetimeoffset = dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz");
+
+            //string timestampString = "2024-07-10 15:21:05.520756+0530";
+            string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
+            int start = 8;
+            int length = 16;
+
+            string split = hashvalue.Remove(start, length);
+            
+
+
+            //DateTimeOffset timestamp = DateTimeOffset.ParseExact(
+            //timestampString,
+            //"yyyy-MM-dd HH:mm:ss.ffffffzzz",
+            //CultureInfo.InvariantCulture);
+
+            DateTimeOffset timestamp = DateTimeOffset.ParseExact(
+            formatdatetimeoffset,
+            "yyyy-MM-dd HH:mm:ss.ffffffzzz",
+            CultureInfo.InvariantCulture);
+
+            long unixTimeMilliseconds = timestamp.ToUnixTimeMilliseconds();
+            byte[] byteArray = BitConverter.GetBytes(unixTimeMilliseconds);
+
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(byteArray);
+            }
+
+            string hexValue = BitConverter.ToString(byteArray).Replace("-", string.Empty);
+
+            string finalhashvalue = split.Insert(8, hexValue);
+
+            Console.WriteLine($"Timestamp: {formatdatetimeoffset}");
+            Console.WriteLine($"Unix Time (Milliseconds): {unixTimeMilliseconds}");
+
+            Console.WriteLine($"Hash Value: {hashvalue}");
+            Console.WriteLine($"Removed Hash Value: {split}");
+
+            Console.WriteLine($"Hex Value: {hexValue}");
+            Console.WriteLine($"FinalHash Value: {finalhashvalue}");
+
+            return finalhashvalue;
         }
     }
 }
