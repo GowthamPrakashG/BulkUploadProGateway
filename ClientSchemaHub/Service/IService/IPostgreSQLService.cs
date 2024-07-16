@@ -16,5 +16,8 @@ namespace ClientSchemaHub.Service.IService
         public Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName);
         public Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName);
 
+        public Task<string> ReceiveHashFromPort(DBConnectionDTO connectionDTO);
+
+
     }
 }
