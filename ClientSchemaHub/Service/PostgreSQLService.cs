@@ -459,11 +459,19 @@ namespace ClientSchemaHub.Service
 
         public async Task<string> ReceiveHashFromPort(DBConnectionDTO connectionDTO)
         {
-            string timestampString = "2024-07-10 15:21:05.520756+0530";
-            string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
+            DateTimeOffset dateTimeOffset = DateTimeOffset.Now;
+            string formatdatetimeoffset = dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz");
+
+            //string timestampString = "2024-07-10 15:21:05.520756+0530";
+            //string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
+
+            //DateTimeOffset timestamp = DateTimeOffset.ParseExact(
+            //timestampString,
+            //"yyyy-MM-dd HH:mm:ss.ffffffzzz",
+            //CultureInfo.InvariantCulture);
 
             DateTimeOffset timestamp = DateTimeOffset.ParseExact(
-            timestampString,
+            formatdatetimeoffset,
             "yyyy-MM-dd HH:mm:ss.ffffffzzz",
             CultureInfo.InvariantCulture);
 
@@ -477,11 +485,9 @@ namespace ClientSchemaHub.Service
 
             string hexValue = BitConverter.ToString(byteArray).Replace("-", string.Empty);
 
-            Console.WriteLine($"Timestamp: {timestampString}");
+            Console.WriteLine($"Timestamp: {formatdatetimeoffset}");
             Console.WriteLine($"Unix Time (Milliseconds): {unixTimeMilliseconds}");
             Console.WriteLine($"Hex Value: {hexValue}");
-
-
 
             return hexValue;
         }
