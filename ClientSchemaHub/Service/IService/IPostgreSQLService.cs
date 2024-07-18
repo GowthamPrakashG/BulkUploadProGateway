@@ -17,6 +17,7 @@ namespace ClientSchemaHub.Service.IService
         public Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName);
 
         public Task<string> ReceiveHashFromPort(DBConnectionDTO connectionDTO);
+        public Task<string> PortCommunication(DBConnectionDTO connectionDTO);
 
 
     }

@@ -5,6 +5,7 @@ using ClientSchemaHub.Service.IService;
 using Npgsql;
 using System.Data;
 using System.Globalization;
+using Spire.Xls;
 
 namespace ClientSchemaHub.Service
 {
@@ -503,6 +504,31 @@ namespace ClientSchemaHub.Service
             Console.WriteLine($"FinalHash Value: {finalhashvalue}");
 
             return finalhashvalue;
+        }
+
+        public async Task<string> PortCommunication(DBConnectionDTO connectionDTO)
+        {
+            try
+            {
+                int portNumber = 1234; 
+                string IPAddress = "192.168.1.100";
+
+                string connectionString = BuildConnectionString(connectionDTO);
+                // Create a new PostgreSQL connection
+                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    // Call ReceiveHashFromPort to get the final hash value
+                    string finalHashValue = await ReceiveHashFromPort(connectionDTO);
+
+                    return finalHashValue;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
     }
 }
