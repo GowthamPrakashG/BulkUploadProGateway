@@ -82,11 +82,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}")] //display list in frontend
-        public async Task<IActionResult> GetTablesByHostProviderDatabase(string hostName, string provider, string databaseName)
+        public async Task<IActionResult> GetTablesByHostProviderDatabase(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region)
         {
             try
             {
-                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName);
+                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName, accessKey, secretkey, region);
 
                 var responseModel = new APIResponse
                 {
@@ -112,7 +112,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string tableName)
         {
             try
             {
@@ -313,62 +313,68 @@ namespace SchemaCraftHub.Controllers
         {
             try
             {
-                // Assuming you have a valid base URL for the other project
                 string otherApiBaseUrl = "https://localhost:7246/";
 
-                // Create HttpClient instance
                 using (var httpClient = new HttpClient())
                 {
-                    // Set the base address of the other API
                     httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
-                    string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+                    string requestUri = BuildRequestUri(connectionDTO);
 
-                    // Call the other API to get table details
-                    var response = await httpClient.GetAsync($"EntityMigrate/GetTableDetails?Provider={connectionDTO.Provider}&HostName={connectionDTO.HostName}&DataBase={connectionDTO.DataBase}&UserName={connectionDTO.UserName}&Password={encodedPassword}");
+                    var response = await httpClient.GetAsync(requestUri);
 
-                    // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
-                        // Read the response content
                         var responseContent = await response.Content.ReadAsStringAsync();
 
-                        // Parse the response content as needed (assuming it's JSON)
-                        var tableDetails = JsonConvert.DeserializeObject<APIResponse>(responseContent);
+                        // Add detailed error handling
+                        APIResponse tableDetails;
+                        try
+                        {
+                            tableDetails = JsonConvert.DeserializeObject<APIResponse>(responseContent);
+                        }
+                        catch (JsonException jsonEx)
+                        {
+                            var responseModel = new APIResponse
+                            {
+                                StatusCode = HttpStatusCode.InternalServerError,
+                                IsSuccess = false,
+                                ErrorMessages = new List<string> { "Deserialization error: " + jsonEx.Message },
+                                Result = null
+                            };
+                            return StatusCode((int)responseModel.StatusCode, responseModel);
+                        }
 
-                        if (!tableDetails.IsSuccess)
+                        if (tableDetails.IsSuccess)
                         {
                             var responseModel = new APIResponse
                             {
                                 StatusCode = HttpStatusCode.OK,
-                                IsSuccess = false,
+                                IsSuccess = true,
                                 Result = tableDetails.Result
                             };
                             return Ok(responseModel);
                         }
                         else
                         {
-                            var responcedetials = await _entitySchemaService.GetClientSchema(tableDetails, connectionDTO);
-
-                            // Continue with your logic...
+                            var responseDetails = await _entitySchemaService.GetClientSchema(tableDetails, connectionDTO);
 
                             var responseModel = new APIResponse
                             {
                                 StatusCode = HttpStatusCode.Created,
                                 IsSuccess = true,
-                                Result = tableDetails
+                                Result = responseDetails
                             };
                             return Ok(responseModel);
                         }
                     }
                     else
                     {
-                        // Handle unsuccessful response
                         var responseModel = new APIResponse
                         {
                             StatusCode = response.StatusCode,
                             IsSuccess = false,
-                            Result = null // You might want to include more details here
+                            Result = null
                         };
 
                         return StatusCode((int)responseModel.StatusCode, responseModel);
@@ -387,6 +393,27 @@ namespace SchemaCraftHub.Controllers
                 return StatusCode((int)responseModel.StatusCode, responseModel);
             }
         }
+
+        private string BuildRequestUri(DBConnectionDTO connectionDTO)
+        {
+            if (connectionDTO.Provider.Contains("Dynamo", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"EntityMigrate/GetTableDetails?Provider={Uri.EscapeDataString(connectionDTO.Provider)}" +
+                       $"&AccessKey={Uri.EscapeDataString(connectionDTO.AccessKey)}" +
+                       $"&SecretKey={Uri.EscapeDataString(connectionDTO.SecretKey)}" +
+                       $"&Region={Uri.EscapeDataString(connectionDTO.Region)}";
+            }
+            else
+            {
+                string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
+                return $"EntityMigrate/GetTableDetails?Provider={Uri.EscapeDataString(connectionDTO.Provider)}" +
+                       $"&HostName={Uri.EscapeDataString(connectionDTO.HostName)}" +
+                       $"&DataBase={Uri.EscapeDataString(connectionDTO.DataBase)}" +
+                       $"&UserName={Uri.EscapeDataString(connectionDTO.UserName)}" +
+                       $"&Password={encodedPassword}";
+            }
+        }
+
 
         [HttpPost("updatetables")]
         public async Task<IActionResult> UpdateTable([FromBody] List<ColumnDTO> columns)

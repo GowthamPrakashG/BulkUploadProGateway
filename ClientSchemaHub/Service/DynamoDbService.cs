@@ -7,7 +7,10 @@ using Dapper;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ClientSchemaHub.Service
 {
@@ -30,6 +33,25 @@ namespace ClientSchemaHub.Service
 
                 tableDetailsDictionary[tableName].Add(tableDetails);
             }
+
+            // Example of hashing device communication data
+            DeviceCommunicationData deviceData = new DeviceCommunicationData
+            {
+                DeviceId = "Device123",
+                CommunicationData = "SampleData",
+                Timestamp = DateTime.UtcNow,
+                ProtocolHeader = "HeaderInfo",
+                AuthToken = "AuthToken123",
+                ConfigParameters = "ConfigParams",
+                Checksum = "ChecksumValue",
+                NetworkAddress = "192.168.1.1:8080",
+                SessionId = "Session123",
+                EncryptionKey = "EncryptionKey123"
+            };
+
+            string concatenatedData = $"{deviceData.DeviceId}:{deviceData.CommunicationData}:{deviceData.Timestamp}:{deviceData.ProtocolHeader}:{deviceData.AuthToken}:{deviceData.ConfigParameters}:{deviceData.Checksum}:{deviceData.NetworkAddress}:{deviceData.SessionId}:{deviceData.EncryptionKey}";
+            string hashedValue = DeviceCommunicationHasher.ComputeHash(concatenatedData);
+            Console.WriteLine($"Hashed Value: {hashedValue}");
 
             return tableDetailsDictionary;
         }
@@ -290,5 +312,21 @@ namespace ClientSchemaHub.Service
         }
     }
 
+    // Class for hashing device communication data
+    public static class DeviceCommunicationHasher
+    {
+        public static string ComputeHash(string data)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
+                StringBuilder builder = new StringBuilder();
+                foreach (byte b in bytes)
+                {
+                    builder.Append(b.ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+    }
 }
-

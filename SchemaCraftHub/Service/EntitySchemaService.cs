@@ -1,12 +1,16 @@
-﻿using DBUtilityHub.Data;
+﻿using Amazon.DynamoDBv2.Model;
+using Amazon.DynamoDBv2;
+using DBUtilityHub.Data;
 using DBUtilityHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
+using System.Drawing;
 using System.Text;
 using APIResponse = SchemaCraftHub.Model.DTO.APIResponse;
 using ColumnDetailsDTO = ClientSchemaHub.Models.DTO.ColumnDetailsDTO;
+using Amazon;
 
 namespace SchemaCraftHub.Service
 {
@@ -68,32 +72,65 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(string hostName, string provider, string databaseName)
+        public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region)
         {
             try
             {
-                var tables = await _context.TableMetaDataEntity
-                    .Where(table => table.HostName.ToLower() == hostName.ToLower() && table.Provider.ToLower() == provider.ToLower() && table.DatabaseName.ToLower() == databaseName.ToLower())
-                    .ToListAsync();
+                List<TableMetaDataDTO> tableDTOs = new List<TableMetaDataDTO>();
 
-                var tableDTOs = tables.Select(table => new TableMetaDataDTO
+                if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
-                    Id = table.Id,
-                    EntityName = table.EntityName,
-                    HostName = table.HostName,
-                    DatabaseName = table.DatabaseName,
-                    Provider = table.Provider
-                    // Map other properties as needed
-                }).ToList();
+                    Console.WriteLine("Fetching tables from DynamoDB.");
+
+                    // Set up DynamoDB client
+                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
+
+                    // Fetch tables from DynamoDB
+                    var request = new ListTablesRequest();
+                    var response = await client.ListTablesAsync(request);
+
+                    foreach (var tableName in response.TableNames)
+                    {
+                        tableDTOs.Add(new TableMetaDataDTO
+                        {
+                            EntityName = tableName,
+                            DatabaseName = databaseName, // Use the provided database name dynamically
+                            Provider = provider
+                        });
+                    }
+                }
+                else
+                {
+                    var tables = await _context.TableMetaDataEntity
+                        .Where(table => table.HostName.ToLower() == hostName.ToLower() &&
+                                        table.Provider.ToLower() == provider.ToLower() &&
+                                        table.DatabaseName.ToLower() == databaseName.ToLower())
+                        .ToListAsync();
+
+                    tableDTOs = tables.Select(table => new TableMetaDataDTO
+                    {
+                        Id = table.Id,
+                        EntityName = table.EntityName,
+                        HostName = table.HostName,
+                        DatabaseName = table.DatabaseName,
+                        Provider = table.Provider
+                        // Map other properties as needed
+                    }).ToList();
+                }
 
                 return tableDTOs;
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
                 throw new ApplicationException("An error occurred while fetching all tables.", ex);
             }
-
         }
+
+
+
 
         public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName)
         {
