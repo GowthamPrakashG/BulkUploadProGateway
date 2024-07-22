@@ -130,38 +130,74 @@ namespace SchemaCraftHub.Service
         }
 
 
-
-
-        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName)
+        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region, string tableName)
         {
             try
             {
-                var table = await _context.TableMetaDataEntity
-                    .FirstOrDefaultAsync(t => t.HostName.ToLower() == hostName.ToLower() && t.Provider.ToLower() == provider.ToLower() && t.DatabaseName.ToLower() == databaseName.ToLower() && t.EntityName.ToLower() == tableName.ToLower());
+                TableMetaDataDTO tableDTO = null;
 
-                if (table == null)
+                if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Handle the case where the table with the given parameters is not found
-                    return null;
+                    Console.WriteLine("Fetching tables from DynamoDB.");
+
+                    // Set up DynamoDB client
+                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
+
+                    // Fetch tables from DynamoDB
+                    var request = new ListTablesRequest();
+                    var response = await client.ListTablesAsync(request);
+
+                    foreach (var table in response.TableNames)
+                    {
+                        if (table.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            tableDTO = new TableMetaDataDTO
+                            {
+                                EntityName = table,
+                                DatabaseName = databaseName,
+                                Provider = provider,
+                                HostName = hostName
+                            };
+                            break;
+                        }
+                    }
                 }
-
-                var tableDTO = new TableMetaDataDTO
+                else
                 {
-                    Id = table.Id,
-                    EntityName = table.EntityName,
-                    HostName = table.HostName,
-                    DatabaseName = table.DatabaseName,
-                    Provider = table.Provider
-                    // Map other properties as needed
-                };
+                    var table = await _context.TableMetaDataEntity
+                        .FirstOrDefaultAsync(table => table.HostName.ToLower() == hostName.ToLower() &&
+                                        table.Provider.ToLower() == provider.ToLower() &&
+                                        table.DatabaseName.ToLower() == databaseName.ToLower() &&
+                                        table.EntityName.ToLower() == tableName.ToLower());
+
+
+                     tableDTO = new TableMetaDataDTO
+                    {
+                        Id = table.Id,
+                        EntityName = table.EntityName,
+                        HostName = table.HostName,
+                        DatabaseName = table.DatabaseName,
+                        Provider = table.Provider
+                        // Map other properties as needed
+                    };
+                }
 
                 return tableDTO;
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while fetching all tables.", ex);
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+                throw new ApplicationException("An error occurred while fetching the table.", ex);
             }
         }
+
+
+
+
+
+
 
         public async Task<List<ColumnDTO>> GetAllColumnsAsync()
         {
@@ -347,7 +383,7 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName, connectionDTO.AccessKey, connectionDTO.SecretKey,connectionDTO.Region);
                                 if (table_exists == null)
                                 {
                                     var tablename = new TableMetaDataDTO
@@ -366,7 +402,7 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName);
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region);
 
                                 if (table_exists != null)
                                 {
@@ -382,11 +418,11 @@ namespace SchemaCraftHub.Service
 
                                         if (column_exists == null)
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region)).Id;
                                             Nullable<int> ReferenceEntityID = null;
                                             if (columnDTO.HasForeignKey)
                                             {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region)).Id;
                                             }
                                             var columnEntity = new ColumnDTO
                                             {
@@ -404,11 +440,11 @@ namespace SchemaCraftHub.Service
                                         }
                                         else
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName)).Id;
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, table.TableName, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region)).Id;
                                             Nullable<int> ReferenceEntityID = null;
                                             if (columnDTO.HasForeignKey)
                                             {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable)).Id;
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, columnDTO.ReferencedTable, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region)).Id;
                                             }
                                             var columnEntity = new ColumnDTO
                                             {
@@ -462,7 +498,7 @@ namespace SchemaCraftHub.Service
         {
             try
             {
-                var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.DatabaseName, tableDTO.EntityName);
+                var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.DatabaseName, tableDTO.EntityName, tableDTO.AccessKey, tableDTO.SecretKey, tableDTO.Region);
                 if (tableexists == null)
                 {
                     var table = new TableMetaDataEntity

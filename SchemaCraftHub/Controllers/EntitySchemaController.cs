@@ -112,11 +112,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string tableName)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region, string tableName)
         {
             try
             {
-                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName);
+                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName,accessKey, secretkey, region, tableName);
                 if (table == null)
                 {
                     return NotFound();
