@@ -112,11 +112,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string tableName)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region, string tableName)
         {
             try
             {
-                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName);
+                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName,accessKey, secretkey, region, tableName);
                 if (table == null)
                 {
                     return NotFound();
@@ -345,7 +345,7 @@ namespace SchemaCraftHub.Controllers
                             return StatusCode((int)responseModel.StatusCode, responseModel);
                         }
 
-                        if (tableDetails.IsSuccess)
+                        if (!tableDetails.IsSuccess)
                         {
                             var responseModel = new APIResponse
                             {
@@ -446,12 +446,12 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("columns/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName)
+        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region)
         {
             try
             {
 
-                var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName);
+                var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName, accessKey, secretKey, region);
                 if (table == null)
                 {
                     return NotFound();

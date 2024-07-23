@@ -7,7 +7,7 @@ namespace SchemaCraftHub.Service.IService
         public Task<List<TableMetaDataDTO>> GetAllTablesAsync();
         public Task<TableMetaDataDTO> GetTableByIdAsync(int id);
         public  Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region);
-        public Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName);
+        public Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region, string tableName);
         public Task<List<ColumnDTO>> GetAllColumnsAsync();
         public Task<ColumnDTO> GetColumnByIdAsync(int id);
         public Task<ColumnDTO> GetColumnByIdAndEntityIDAsync(int id, int entityId);
@@ -17,7 +17,7 @@ namespace SchemaCraftHub.Service.IService
         public Task<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1, DBConnectionDTO connectionDTO);
         public Task<APIResponse> convertandcallcreatetablemodel(DBConnectionDTO connectionDTO, TableRequest tableRequest);
         public Task UpdateColumnsAsync(List<ColumnDTO> columns);
-        public Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName);
+        public Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region);
 
     }
 }
