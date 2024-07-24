@@ -72,7 +72,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region)
+        public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(string? hostName, string provider, string? databaseName, string? accessKey, string? secretKey, string? region)
         {
             try
             {
@@ -130,7 +130,7 @@ namespace SchemaCraftHub.Service
         }
 
 
-        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string accessKey, string secretKey, string region, string tableName)
+        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? accessKey, string? secretKey, string? region, string? tableName)
         {
             try
             {
@@ -732,7 +732,7 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while updating columns.", ex);
             }
         }
-        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region)
+        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string? secretKey, string? region)
         {
             try
             {

@@ -82,7 +82,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}")] //display list in frontend
-        public async Task<IActionResult> GetTablesByHostProviderDatabase(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region)
+        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region)
         {
             try
             {
@@ -112,7 +112,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region, string tableName)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string? tableName)
         {
             try
             {
@@ -446,7 +446,7 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("columns/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region)
+        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string ?secretKey, string? region)
         {
             try
             {
