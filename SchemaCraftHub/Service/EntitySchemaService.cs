@@ -1,16 +1,15 @@
-﻿using Amazon.DynamoDBv2.Model;
+﻿using Amazon;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using DBUtilityHub.Data;
 using DBUtilityHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
-using System.Drawing;
 using System.Text;
 using APIResponse = SchemaCraftHub.Model.DTO.APIResponse;
 using ColumnDetailsDTO = ClientSchemaHub.Models.DTO.ColumnDetailsDTO;
-using Amazon;
 
 namespace SchemaCraftHub.Service
 {
@@ -147,22 +146,31 @@ namespace SchemaCraftHub.Service
                     var request = new ListTablesRequest();
                     var response = await client.ListTablesAsync(request);
 
-                    foreach (var table in response.TableNames)
+                    var table = await _context.TableMetaDataEntity
+                        .FirstOrDefaultAsync(table => table.AccessKey.ToLower() == accessKey.ToLower() &&
+                                        table.SecretKey.ToLower() == secretKey.ToLower() &&
+                                        table.Region.ToLower() == region.ToLower() &&
+                                        table.Provider.ToLower() == provider.ToLower() &&
+                                        table.DatabaseName.ToLower() == databaseName.ToLower() &&
+                                        table.EntityName.ToLower() == tableName.ToLower());
+
+                    if (table == null)
                     {
-                        if (table.Equals(tableName, StringComparison.OrdinalIgnoreCase))
-                        {
+                        return null;
+                    }                       
                             tableDTO = new TableMetaDataDTO
                             {
-                                EntityName = table,
+                                Id = table.Id,
+                                EntityName = tableName,
                                 DatabaseName = databaseName,
                                 Provider = provider,
-                                HostName = hostName
-                            };
-                            break;
-                        }
-                    }
+                                HostName = hostName,
+                                AccessKey = accessKey,
+                                Region = region,
+                                SecretKey = secretKey
+                            };                      
+                   
                     return tableDTO;
-
                 }
                 else
                 {
@@ -177,7 +185,6 @@ namespace SchemaCraftHub.Service
                         return null;
                     }
 
-
                      tableDTO = new TableMetaDataDTO
                     {
                         Id = table.Id,
@@ -188,9 +195,7 @@ namespace SchemaCraftHub.Service
                         // Map other properties as needed
                     };
                     return tableDTO;
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -200,12 +205,6 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while fetching the table.", ex);
             }
         }
-
-
-
-
-
-
 
         public async Task<List<ColumnDTO>> GetAllColumnsAsync()
         {
@@ -399,7 +398,10 @@ namespace SchemaCraftHub.Service
                                         EntityName = table.TableName,
                                         HostName = connectionDTO.HostName,
                                         DatabaseName = connectionDTO.DataBase,
-                                        Provider = connectionDTO.Provider
+                                        Provider = connectionDTO.Provider,
+                                        AccessKey = connectionDTO.AccessKey,
+                                        Region = connectionDTO.Region,
+                                        SecretKey = connectionDTO.SecretKey
                                     };
                                     await CreateTableAsync(tablename);
                                 }
@@ -514,7 +516,10 @@ namespace SchemaCraftHub.Service
                         EntityName = tableDTO.EntityName,
                         HostName = tableDTO.HostName,
                         DatabaseName = tableDTO.DatabaseName,
-                        Provider = tableDTO.Provider
+                        Provider = tableDTO.Provider,
+                        AccessKey = tableDTO.AccessKey, 
+                        Region = tableDTO.Region,
+                        SecretKey = tableDTO.SecretKey
                         // Map other properties as needed
                     };
 
@@ -741,48 +746,49 @@ namespace SchemaCraftHub.Service
                 if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine("Fetching columns from DynamoDB table.");
-                    // Set up DynamoDB client
-                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
-                    // Describe the DynamoDB table
-                    var describeTableRequest = new DescribeTableRequest
-                    {
-                        TableName = tableName
-                    };
 
-                    var describeTableResponse = await client.DescribeTableAsync(describeTableRequest);
-                    // Extract attribute definitions (columns) from the table description
-                    var attributeDefinitions = describeTableResponse.Table.AttributeDefinitions;
-                    var keySchema = describeTableResponse.Table.KeySchema;
-                    foreach (var attribute in attributeDefinitions)
-                    {
-                        bool isPrimaryKey = keySchema.Any(k => k.AttributeName == attribute.AttributeName);
-                        var columnDTO = new ColumnDTO
-                        {
-                            Id = 0, // Default to 0, should be set appropriately based on your requirements
-                            ColumnName = attribute.AttributeName,
-                            Datatype = attribute.AttributeType.ToString(),
-                            IsPrimaryKey = isPrimaryKey,
-                            IsForeignKey = false, 
-                            EntityId = 0, 
-                            ReferenceEntityID = null, 
-                            ReferenceColumnID = null, 
-                            Length = null,
-                            MinLength = null,
-                            MaxLength = null, 
-                            MaxRange = null, 
-                            MinRange = null, 
-                            DateMinValue = null, 
-                            DateMaxValue = null, 
-                            Description = $"Attribute of {tableName}",
-                            IsNullable = true, 
-                            DefaultValue = null, 
-                            True = null, 
-                            False = null 
-                        };
+                    var table = await _context.TableMetaDataEntity
+                       .FirstOrDefaultAsync(t => t.AccessKey.ToLower() == accessKey.ToLower() && 
+                       t.SecretKey.ToLower() == secretKey.ToLower() && 
+                       t.Region.ToLower() == region.ToLower() && 
+                       t.Provider.ToLower() == provider.ToLower() && 
+                       t.DatabaseName.ToLower() == databaseName.ToLower() && 
+                       t.EntityName.ToLower() == tableName.ToLower());
 
-                        columns.Add(columnDTO);
+                    if (table == null)
+                    {
+                        return null;
                     }
-                    return columns;
+
+                    var column = await _context.ColumnMetaDataEntity
+                            .Where(column => column.EntityId == table.Id)
+                            .ToListAsync();
+                    var columnDTOs = column.Select(column => new Model.DTO.ColumnDTO
+                    {
+                        Id = column.Id,
+                        ColumnName = column.ColumnName,
+                        Datatype = column.Datatype,
+                        IsPrimaryKey = column.IsPrimaryKey,
+                        IsForeignKey = column.IsForeignKey,
+                        EntityId = column.EntityId,
+                        ReferenceEntityID = column.ReferenceEntityID,
+                        ReferenceColumnID = column.ReferenceColumnID,
+                        Length = column.Length,
+                        MinLength = column.MinLength,
+                        MaxLength = column.MaxLength,
+                        MaxRange = column.MaxRange,
+                        MinRange = column.MinRange,
+                        DateMinValue = column.DateMinValue,
+                        DateMaxValue = column.DateMaxValue,
+                        Description = column.Description,
+                        IsNullable = column.IsNullable,
+                        DefaultValue = column.DefaultValue,
+                        True = column.True,
+                        False = column.False,
+                        // Include other properties as needed
+                    }).ToList();
+
+                    return columnDTOs;
                 }
 
                 else
