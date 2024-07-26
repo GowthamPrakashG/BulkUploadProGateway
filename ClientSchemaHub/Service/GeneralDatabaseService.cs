@@ -257,23 +257,23 @@ namespace ClientSchemaHub.Service
         }
 
 
-        public async Task<List<dynamic>> PortCommunication(DBConnectionDTO dBConnection, string tableName)
+        public async Task<string> PortCommunication(DBConnectionDTO dBConnection)
         {
             try
             {
                 switch (dBConnection.Provider)
                 {
                     case "postgresql":
-                        return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                        return await _postgreSQLService.ReceiveHashFromPort(dBConnection);
                     //case "mysql": // Add the MySQL case
                     //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
                     // Add cases for other database providers
-                    case "MS SQL":
-                        return await _msSQLService.GetTabledata(dBConnection, tableName);
-                    case "Timescale":
-                        return await _timescaleService.GetTabledata(dBConnection, tableName);
-                    case "Dynamo":
-                        return await _dynamoDbService.GetTabledata(dBConnection, tableName);
+                    //case "MS SQL":
+                    //    return await _msSQLService.GetTabledata(dBConnection);
+                    //case "Timescale":
+                    //    return await _timescaleService.GetTabledata(dBConnection);
+                    //case "Dynamo":
+                    //    return await _dynamoDbService.GetTabledata(dBConnection);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -282,6 +282,7 @@ namespace ClientSchemaHub.Service
             {
                 throw new ArgumentException(ex.Message);
             }
+
         }
 
     }

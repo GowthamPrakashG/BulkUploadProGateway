@@ -12,6 +12,8 @@ namespace ClientSchemaHub.Service.IService
         public Task<bool> InsertdataGeneral(DBConnectionDTO? connectionDTO, List<Dictionary<string, string>>? convertedDataList, List<ColumnMetaDataDTO>? booleancolumns, string? tablename);
         public Task<bool> IsTableExists(DBConnectionDTO dBConnection, string tableName);
         public Task<List<dynamic>> GetTabledata(DBConnectionDTO dBConnection, string tableName);
+
         public Task<string> ReceiveHashFromPort(DBConnectionDTO dBConnection);
+        public Task<string> PortCommunication(DBConnectionDTO dBConnection);
     }
 }
