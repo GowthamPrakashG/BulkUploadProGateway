@@ -11,13 +11,15 @@ namespace ClientSchemaHub.Service
         private readonly IMSSQLService _msSQLService;
         private readonly ITimescaleService _timescaleService;
         private readonly IDynamoDbService _dynamoDbService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService)
+        private readonly IAzureService _azureService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IAzureService azureService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _timescaleService = timescaleService;
             _dynamoDbService = dynamoDbService;
+            _azureService = azureService;
 
             // Initialize other database services
         }
@@ -40,6 +42,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Dynamo":
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Azure":
+                        return await _azureService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -190,6 +194,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
+                    case "Azure":
+                        return await _azureService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

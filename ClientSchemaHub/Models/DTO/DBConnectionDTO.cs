@@ -1,4 +1,6 @@
-﻿namespace ClientSchemaHub.Models.DTO
+﻿using Microsoft.Azure.Cosmos;
+
+namespace ClientSchemaHub.Models.DTO
 {
     public class DBConnectionDTO
     {
@@ -12,5 +14,10 @@
         public string? Region { get; set; }
         public string? IPAddress { get;  set; }
         public int? PortNumber { get;  set; }
+
+         
+        public string AccountEndpoint { get; set; }
+        public string AccountKey { get; set; }
+        public string ContainerName { get; set; }
     }
 }

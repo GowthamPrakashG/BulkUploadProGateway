@@ -21,6 +21,7 @@ builder.Services.AddScoped<IMySQLService, MySQLService>();
 builder.Services.AddScoped<IMSSQLService, MSSQLService>();
 builder.Services.AddScoped<IGeneralDatabaseService, GeneralDatabaseService>();
 builder.Services.AddScoped<IDynamoDbService, DynamoDbService>();
+builder.Services.AddScoped<IAzureService, AzureService>();
 
 
 // Register configuration options
