@@ -1,4 +1,5 @@
-﻿using ClientSchemaHub.Models.DTO;
+﻿using Azure.Core.Extensions;
+using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -11,13 +12,15 @@ namespace ClientSchemaHub.Service
         private readonly IMSSQLService _msSQLService;
         private readonly ITimescaleService _timescaleService;
         private readonly IDynamoDbService _dynamoDbService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService)
+        private readonly IScyllaService _scyllaService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IScyllaService scyllaService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _timescaleService = timescaleService;
             _dynamoDbService = dynamoDbService;
+            _scyllaService = scyllaService;
 
             // Initialize other database services
         }
@@ -40,6 +43,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Dynamo":
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Scylla":
+                        return await _scyllaService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
