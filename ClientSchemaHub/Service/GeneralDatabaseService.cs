@@ -1,6 +1,5 @@
 ﻿using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace ClientSchemaHub.Service
 {
@@ -11,13 +10,15 @@ namespace ClientSchemaHub.Service
         private readonly IMSSQLService _msSQLService;
         private readonly ITimescaleService _timescaleService;
         private readonly IDynamoDbService _dynamoDbService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService)
+        private readonly IInfluxDbService _influxDbService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IInfluxDbService influxDbService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _timescaleService = timescaleService;
             _dynamoDbService = dynamoDbService;
+            _influxDbService = influxDbService;
 
             // Initialize other database services
         }
@@ -40,6 +41,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Dynamo":
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Influx":
+                        return await _influxDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -64,6 +67,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableNamesAsync(connectionDTO);
                     case "Timescale":
                         return await _timescaleService.GetTableNamesAsync(connectionDTO);
+                    //case "Influx":
+                    //    return await _influxDbService.GetTableNamesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -87,6 +92,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "Timescale":
                         return await _timescaleService.GetTableDetailsAsync(connectionDTO, tableName);
+                    case "Influx":
+                        return await _influxDbService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -190,6 +197,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
+                    case "Influx":
+                        return await _influxDbService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -217,6 +226,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTabledata(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetTabledata(dBConnection,tableName);
+                    case "Influx":
+                        return await _influxDbService.GetTabledata(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
