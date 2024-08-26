@@ -12,6 +12,7 @@
     <PackageReference Include="Cassandra.NET" Version="1.0.7" />
     <PackageReference Include="CassandraCSharpDriver" Version="3.20.1" />
     <PackageReference Include="CqlSharp" Version="0.41.1" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="EPPlus" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
     <PackageReference Include="Npgsql" Version="7.0.4" />

@@ -69,6 +69,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableNamesAsync(connectionDTO);
                     case "Timescale":
                         return await _timescaleService.GetTableNamesAsync(connectionDTO);
+                    case "Scylla":
+                        return await _scyllaService.GetTableNamesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -92,6 +94,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "Timescale":
                         return await _timescaleService.GetTableDetailsAsync(connectionDTO, tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

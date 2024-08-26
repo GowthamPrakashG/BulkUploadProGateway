@@ -13,6 +13,6 @@
         public string? IPAddress { get;  set; }
         public int? PortNumber { get;  set; }
         public string? Ec2Instance { get; set; }
-        public string? Keyspace { get; internal set; }
+        public string? Keyspace { get;  set; }
     }
 }
