@@ -122,6 +122,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -199,6 +201,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
+                    case "Scylla":
+                        return await _scyllaService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -226,6 +230,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTabledata(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetTabledata(dBConnection,tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetTableData(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

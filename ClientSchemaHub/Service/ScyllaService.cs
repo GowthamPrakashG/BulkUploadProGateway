@@ -1,216 +1,94 @@
-﻿using Cassandra;
-using Cassandra.Data.Linq;
+﻿
+using Cassandra;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
-using Dapper;
-using System.Data.Common;
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ClientSchemaHub.Service
 {
     public class ScyllaService : IScyllaService
     {
-
         public async Task<Dictionary<string, List<TableDetailsDTO>>> GetTableDetailsForAllTablesAsync(DBConnectionDTO connectionDTO)
         {
-            var scyllaDbClient = GetScyllaDbClient(connectionDTO);
-            var tableNames = await GetTableNamesAsync(scyllaDbClient);
-            var tableDetailsDictionary = new Dictionary<string, List<TableDetailsDTO>>();
+            var session = GetScyllaDbSession(connectionDTO);
+            var tableNames = await GetTableNamesAsync(session, connectionDTO.Keyspace);
+            Dictionary<string, List<TableDetailsDTO>> tableDetailsDictionary = new Dictionary<string, List<TableDetailsDTO>>();
+
             foreach (var tableName in tableNames)
             {
-                try
+                var tableDetails = await GetTableDetailsAsync(session, connectionDTO.Keyspace, tableName);
+
+                if (!tableDetailsDictionary.ContainsKey(tableName))
                 {
-                    var tableDetails = await GetTableDetailsAsync(connectionDTO, tableName);
-                    if (!tableDetailsDictionary.ContainsKey(tableName))
-                    {
-                        tableDetailsDictionary[tableName] = new List<TableDetailsDTO>();
-                    }
-                    tableDetailsDictionary[tableName].Add(tableDetails);
+                    tableDetailsDictionary[tableName] = new List<TableDetailsDTO>();
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error fetching details for table {tableName}: {ex.Message}");
-                }
+
+                tableDetailsDictionary[tableName].Add(tableDetails);
             }
+
             return tableDetailsDictionary;
         }
 
-        private ICluster GetScyllaDbClient(DBConnectionDTO connectionDTO)
+        private Cassandra.ISession GetScyllaDbSession(DBConnectionDTO connectionDTO)
         {
-            var ec2Instance = connectionDTO.Ec2Instance;
-            var region = connectionDTO.Region;
-            var hosts = ResolveHosts(ec2Instance, region);
-            var builder = Cluster.Builder()
-                .AddContactPoints(hosts)
-                .WithCredentials(connectionDTO.AccessKey, connectionDTO.SecretKey)
-                .WithDefaultKeyspace(connectionDTO.Keyspace)
-                .WithSocketOptions(new SocketOptions().SetConnectTimeoutMillis(30000))
-                .WithRetryPolicy(new DefaultRetryPolicy())
-                .WithLoadBalancingPolicy(new DCAwareRoundRobinPolicy("datacenter1")); // Replace with your actual datacenter name
-            try
-            {
-                return builder.Build();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error building ScyllaDB client: {ex.Message}");
-                throw;
-            }
+            var cluster = Cluster.Builder()
+                .AddContactPoint(connectionDTO.IPAddress)
+                .WithPort(connectionDTO.PortNumber ?? 9042)
+                .Build();
+            return cluster.Connect(connectionDTO.Keyspace);
         }
 
-        private IEnumerable<string> ResolveHosts(string ec2Instance, string region)
-        {
-            // Replace with actual hostname resolution logic
-            return new List<string> { "54.162.28.160" }; // Ensure this IP is correct
-        }
-
-        private async Task<List<string>> GetTableNamesAsync(ICluster scyllaDbClient)
+        private async Task<List<string>> GetTableNamesAsync(Cassandra.ISession session, string keyspace)
         {
             var tableNames = new List<string>();
-            Cassandra.ISession session = null;
+
             try
             {
-                session = await scyllaDbClient.ConnectAsync().ConfigureAwait(false);
-                var tableNamesQuery = new SimpleStatement($"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{session.Keyspace}';");
-                var tableNamesResult = await session.ExecuteAsync(tableNamesQuery);
-                tableNames = tableNamesResult.Select(row => row.GetValue<string>("table_name")).ToList();
-            }
-            catch (NoHostAvailableException ex)
-            {
-                Console.WriteLine($"No hosts available: {ex.Message}");
-                throw;
+                var query = $"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace}';";
+                var rowSet = await session.ExecuteAsync(new SimpleStatement(query));
+
+                foreach (var row in rowSet)
+                {
+                    tableNames.Add(row.GetValue<string>("table_name"));
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting table names: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
                 throw;
             }
-            finally
-            {
-                session?.Dispose();
-            }
+
             return tableNames;
         }
 
         public async Task<List<string>> GetTableNamesAsync(DBConnectionDTO connectionDTO)
         {
-            var scyllaDbClient = GetScyllaDbClient(connectionDTO);
-            return await GetTableNamesAsync((Cluster)scyllaDbClient);
+            var session = GetScyllaDbSession(connectionDTO);
+            return await GetTableNamesAsync(session, connectionDTO.Keyspace);
         }
 
-        //public async Task<TableDetailsDTO> GetTableDetailsAsync(ICluster scyllaDbClient, string tableName)
-        //{
-        //    var tableDetails = new TableDetailsDTO { TableName = tableName };
-        //    try
-        //    {
-        //        Console.WriteLine(tableName, tableDetails);
-        //        using (var session = scyllaDbClient.Connect())
-        //        {
-        //            var keyspace = session.Keyspace;
-        //            if (string.IsNullOrEmpty(keyspace))
-        //            {
-        //                throw new InvalidOperationException("Keyspace is not set.");
-        //            }
-        //            if (string.IsNullOrEmpty(tableName))
-        //            {
-        //                throw new ArgumentException("Table name is null or empty.");
-        //            }
-        //            Console.WriteLine(session.Cluster.Metadata);
-        //            Console.WriteLine(session.Cluster.Metadata);
-
-
-        //            ICollection<string> tableMetadata = session.Cluster.Metadata.GetTables(keyspace);
-        //            if (tableMetadata == null)
-        //            {
-        //                Console.WriteLine($"Table metadata for {tableName} is null. Check if the table exists in the keyspace {keyspace}.");
-        //                return tableDetails;
-        //            }
-        //            var columnDetailsList = new List<ColumnDetailsDTO>();
-        //            foreach (var column in tableMetadata)
-        //            {
-        //                if (column == null)
-        //                {
-        //                    Console.WriteLine($"Encountered null column metadata for table {tableName}.");
-        //                    continue; // Skip if column is null
-        //                }
-        //                var columnDetails = new ColumnDetailsDTO
-        //                {
-        //                    ColumnName = column. ?? "Unknown",
-        //                    DataType = column.Type != null ? column.Type.ToString() : "Unknown",
-        //                    IsPrimaryKey = false,
-        //                    HasForeignKey = false,
-        //                    ReferencedTable = null,
-        //                    ReferencedColumn = null,
-        //                    IsNullable = true
-        //                };
-        //                columnDetailsList.Add(columnDetails);
-        //            }
-        //            var additionalColumnDetails = await GetColumnDetailsAsync(session, keyspace, tableName);
-        //            // Ensure that the result is not null to avoid potential null reference issues
-        //            if (additionalColumnDetails != null)
-        //            {
-        //                foreach (var detail in additionalColumnDetails)
-        //                {
-        //                    if (detail == null)
-        //                    {
-        //                        Console.WriteLine($"Encountered null column detail for table {tableName}.");
-        //                        continue; // Skip if detail is null
-        //                    }
-        //                    // Find the column in the existing list
-        //                    var column = columnDetailsList.FirstOrDefault(c => c.ColumnName == detail.ColumnName);
-        //                    if (column != null)
-        //                    {
-        //                        // Update the properties of the column
-        //                        column.IsNullable = detail.IsNullable;
-        //                        // Update other properties if needed
-        //                        // e.g., column.DataType = detail.DataType;
-        //                        // Add other property updates as needed
-        //                    }
-        //                }
-        //            }
-        //            // Assign the updated list back to tableDetails
-        //            tableDetails.Columns = columnDetailsList;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error fetching details for table {tableName}: {ex.Message}");
-        //        throw;
-        //    }
-        //    return tableDetails;
-        //}
-
-
-
-
-        public async Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO connectionDTO, string tableName)
+        private async Task<TableDetailsDTO> GetTableDetailsAsync(Cassandra.ISession session, string keyspace, string tableName)
         {
             var tableDetails = new TableDetailsDTO { TableName = tableName };
 
             try
             {
-                // Create a new cluster and session for each call
-                var cluster = Cluster.Builder()
-                                     .AddContactPoint(connectionDTO.IPAddress)
-                                     .Build();
+                var query = $@"
+                    SELECT column_name, type 
+                    FROM system_schema.columns 
+                    WHERE keyspace_name = '{keyspace}' AND table_name = '{tableName}';";
 
-                using (var session = cluster.Connect(connectionDTO.Keyspace))
+                var rowSet = await session.ExecuteAsync(new SimpleStatement(query));
+
+                tableDetails.Columns = rowSet.Select(row => new ColumnDetailsDTO
                 {
-                    // Get metadata from the session's cluster instance
-                    var tableMetadata = session.Cluster.Metadata.GetTable(session.Keyspace, tableName);
-
-                    if (tableMetadata != null)
-                    {
-                        tableDetails.Columns = tableMetadata.TableColumns.Select(column => new ColumnDetailsDTO
-                        {
-                            ColumnName = column.Name,
-                            DataType = column.Type.ToString() // ScyllaDB's type representation
-                        }).ToList();
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Table {tableName} does not exist.");
-                    }
-                }
+                    ColumnName = row.GetValue<string>("column_name"),
+                    DataType = row.GetValue<string>("type")
+                }).ToList();
             }
             catch (Exception ex)
             {
@@ -221,88 +99,137 @@ namespace ClientSchemaHub.Service
             return tableDetails;
         }
 
-
-        private async Task<List<ColumnDetailsDTO>> GetColumnDetailsAsync(Cassandra.ISession session, string keyspace, string tableName)
+        public async Task<TableDetailsDTO> GetTableDetailsAsync(DBConnectionDTO connectionDTO, string tableName)
         {
-            var columnsQuery = $@"
-SELECT column_name, type, is_nullable
-FROM system_schema.columns
-WHERE keyspace_name = '{keyspace}' AND table_name = '{tableName}'";
-            // Execute the query to get column details
-            var result = await session.ExecuteAsync(new SimpleStatement(columnsQuery));
-            var columnDetailsList = result.Select(row => new ColumnDetailsDTO
-            {
-                ColumnName = row.GetValue<string>("column_name"),
-                DataType = row.GetValue<string>("type"),
-                IsNullable = row.GetValue<string>("is_nullable") == "YES"
-            }).ToList();
-
-            // Handle null values for columns that are expected to be Double
-            foreach (var column in columnDetailsList)
-            {
-                if (column.DataType == "double" && column.IsNullable)
-                {
-                    // Assuming you want to represent null Double values as 0.0
-                    column.DataType = "double?"; // or Nullable<Double>
-                }
-            }
-
-            return columnDetailsList;
+            var session = GetScyllaDbSession(connectionDTO);
+            return await GetTableDetailsAsync(session, connectionDTO.Keyspace, tableName);
         }
 
-        private async Task<TableDetailsDTO> GetTableDetailsAsync(DbConnection connection, string tableName)
+        public async Task<List<dynamic>> GetTableData(DBConnectionDTO dBConnection, string tableName)
         {
-            var tableDetails = new TableDetailsDTO { TableName = tableName };
-            string columnsQuery = @"
-SELECT
-column_name AS ColumnName,
-data_type AS DataType,
-CASE WHEN IS_NULLABLE = 'NO' THEN 0 ELSE 1 END AS IsNullable,
-(SELECT COUNT(1) > 0 FROM information_schema.key_column_usage kcu
-WHERE kcu.constraint_name IN (
-SELECT tc.constraint_name FROM information_schema.table_constraints tc
-WHERE tc.table_name = @TableName AND tc.constraint_type = 'PRIMARY KEY'
-) AND kcu.table_name = @TableName AND kcu.column_name = c.column_name) AS IsPrimaryKey,
-EXISTS (
-SELECT 1 FROM information_schema.key_column_usage kcu
-JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-WHERE tc.table_name = @TableName AND tc.constraint_type = 'FOREIGN KEY'
-AND kcu.column_name = c.column_name
-) AS HasForeignKey,
-(SELECT ccu.table_name FROM information_schema.key_column_usage kcu
-JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-WHERE tc.table_name = @TableName AND tc.constraint_type = 'FOREIGN KEY'
-AND kcu.column_name = c.column_name) AS ReferencedTable,
-(SELECT ccu.column_name FROM information_schema.key_column_usage kcu
-JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = kcu.constraint_name
-JOIN information_schema.table_constraints tc ON tc.constraint_name = kcu.constraint_name
-WHERE tc.table_name = @TableName AND tc.constraint_type = 'FOREIGN KEY'
-AND kcu.column_name = c.column_name) AS ReferencedColumn
-FROM information_schema.columns c
-WHERE table_name = @TableName";
+            var session = GetScyllaDbSession(dBConnection);
+
+            // Query the ScyllaDB table to get all rows
+            var query = $"SELECT * FROM {dBConnection.Keyspace}.{tableName}";
+
             try
             {
-                var columns = await connection.QueryAsync<dynamic>(columnsQuery, new { TableName = tableName });
-                // Map results manually to handle null values
-                var columnDetails = columns.Select(row => new ColumnDetailsDTO
-                {
-                    ColumnName = row.ColumnName ?? "Unknown",
-                    DataType = row.DataType ?? "Unknown",
-                    IsNullable = row.IsNullable != null ? Convert.ToBoolean(row.IsNullable) : false,
-                    IsPrimaryKey = row.IsPrimaryKey != null ? Convert.ToBoolean(row.IsPrimaryKey) : false,
-                    HasForeignKey = row.HasForeignKey != null ? Convert.ToBoolean(row.HasForeignKey) : false,
-                    ReferencedTable = row.ReferencedTable ?? "Unknown",
-                    ReferencedColumn = row.ReferencedColumn ?? "Unknown"
-                }).ToList();
-                tableDetails.Columns = columnDetails;
+                var rowSet = await session.ExecuteAsync(new SimpleStatement(query));
+
+                // Assume column names are fetched beforehand or known
+                var columnNames = rowSet.Columns.Select(col => col.Name).ToList(); // Get column names
+
+                var data = rowSet.Select(row => ConvertToDynamic(row, columnNames)).ToList();
+
+                return data;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching columns for table {tableName}: {ex.Message}");
+                throw new ArgumentException($"Error retrieving data from table {tableName}: {ex.Message}");
+            }
+        }
+
+        // Helper method to convert ScyllaDB Row to dynamic object
+        private dynamic ConvertToDynamic(Row row, List<string> columnNames)
+        {
+            var expandoObj = new ExpandoObject() as IDictionary<string, object>;
+
+            foreach (var columnName in columnNames)
+            {
+                expandoObj[columnName] = row.GetValue<object>(columnName);
+            }
+
+            return expandoObj;
+        }
+
+
+        public async Task<bool> IsTableExists(DBConnectionDTO connectionDTO, string tableName)
+        {
+            try
+            {
+                var session = GetScyllaDbSession(connectionDTO);
+
+                // Query to check if the table exists in the specified keyspace
+                var query = $@"
+            SELECT COUNT(*) 
+            FROM system_schema.tables 
+            WHERE keyspace_name = '{connectionDTO.Keyspace}' 
+            AND table_name = '{tableName}';";
+
+                var rowSet = await session.ExecuteAsync(new SimpleStatement(query));
+
+                // Fetch the first row from the result set and check if the count is greater than 0
+                var row = rowSet.FirstOrDefault();
+                return row != null && row.GetValue<long>("count") > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking if table exists: {ex.Message}");
                 throw;
             }
-            return tableDetails;
         }
+
+
+        public async Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
+        {
+            var session = GetScyllaDbSession(dBConnection);
+
+            // Get primary key columns
+            List<string> primaryKeyColumns = new List<string>();
+            try
+            {
+                var query = $@"
+        SELECT column_name 
+        FROM system_schema.columns 
+        WHERE keyspace_name = '{dBConnection.Keyspace}' 
+        AND table_name = '{tableName}' 
+        AND kind = 'partition_key' ALLOW FILTERING;";  // Adding ALLOW FILTERING
+
+                var rowSet = await session.ExecuteAsync(new SimpleStatement(query));
+
+                primaryKeyColumns = rowSet.Select(row => row.GetValue<string>("column_name")).ToList();
+
+                if (primaryKeyColumns.Count == 0)
+                {
+                    throw new InvalidOperationException($"Table '{tableName}' does not have a primary key.");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Error fetching primary key columns for table {tableName}: {ex.Message}");
+            }
+
+
+            // Prepare the SELECT query to retrieve primary key data
+            var primaryKeySelect = string.Join(", ", primaryKeyColumns);
+            var selectQuery = $"SELECT {primaryKeySelect} FROM {dBConnection.Keyspace}.{tableName};";
+
+            try
+            {
+                var result = await session.ExecuteAsync(new SimpleStatement(selectQuery));
+                var primaryKeys = new List<object>();
+
+                foreach (var row in result)
+                {
+                    var primaryKeyValues = new ExpandoObject() as IDictionary<string, object>;
+
+                    foreach (var column in primaryKeyColumns)
+                    {
+                        primaryKeyValues[column] = row.GetValue<object>(column);
+                    }
+
+                    primaryKeys.Add(primaryKeyValues);
+                }
+
+                return primaryKeys.Cast<object>().ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Error retrieving primary key data from table {tableName}: {ex.Message}");
+            }
+        }
+
+
+
     }
 }
