@@ -33,6 +33,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
                 connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
+                connectionDto.InfluxDbUrl = HttpUtility.UrlDecode(connectionDto.InfluxDbUrl);
 
                 // Step 1: Inspect request data
                 // Log or debug the received connectionDto to inspect its content

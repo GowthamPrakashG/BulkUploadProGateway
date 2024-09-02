@@ -120,6 +120,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
+                    case "Influx":
+                        return await _influxDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

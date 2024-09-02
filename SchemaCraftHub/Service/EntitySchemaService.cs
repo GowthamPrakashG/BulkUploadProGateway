@@ -1,15 +1,17 @@
 ﻿using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using ClientSchemaHub.Models.DTO;
 using DBUtilityHub.Data;
 using DBUtilityHub.Models;
+using InfluxDB.Client;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
 using System.Text;
 using APIResponse = SchemaCraftHub.Model.DTO.APIResponse;
-using ColumnDetailsDTO = ClientSchemaHub.Models.DTO.ColumnDetailsDTO;
+using DBConnectionDTO = SchemaCraftHub.Model.DTO.DBConnectionDTO;
 
 namespace SchemaCraftHub.Service
 {
@@ -129,7 +131,7 @@ namespace SchemaCraftHub.Service
         }
 
 
-        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? accessKey, string? secretKey, string? region, string? tableName)
+        public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? accessKey, string? secretKey, string? region, string? tableName, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
@@ -157,21 +159,76 @@ namespace SchemaCraftHub.Service
                     if (table == null)
                     {
                         return null;
-                    }                       
-                            tableDTO = new TableMetaDataDTO
-                            {
-                                Id = table.Id,
-                                EntityName = tableName,
-                                DatabaseName = databaseName,
-                                Provider = provider,
-                                HostName = hostName,
-                                AccessKey = accessKey,
-                                Region = region,
-                                SecretKey = secretKey
-                            };                      
-                   
+                    }
+                    tableDTO = new TableMetaDataDTO
+                    {
+                        Id = table.Id,
+                        EntityName = tableName,
+                        DatabaseName = databaseName,
+                        Provider = provider,
+                        HostName = hostName,
+                        AccessKey = accessKey,
+                        Region = region,
+                        SecretKey = secretKey
+                    };
+
                     return tableDTO;
                 }
+
+                if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Fetching measurements from InfluxDB.");
+
+                    // Set up InfluxDB client
+                    var options = new InfluxDBClientOptions.Builder()
+                        .Url(influxDbUrl)
+                        .AuthenticateToken(influxDbToken.ToCharArray())
+                        .Org(influxDbOrg)
+                        .Build();
+
+                    var influxDbClient = new InfluxDBClient(options);
+                    var tableDetails = new TableDetailsDTO { TableName = tableName };        
+                    
+                        var query = $"from(bucket: \"{influxDbBucket}\") |> range(start: -1h) |> limit(n:1)";
+                        var fluxTables = await influxDbClient.GetQueryApi().QueryAsync(query,influxDbOrg);
+
+                        if (fluxTables.Count > 0)
+                        {
+                            var fluxTable = fluxTables[0];
+                            tableDetails.Columns = fluxTable.Columns.Select(col => new ColumnDetailsDTO
+                            {
+                                ColumnName = col.Label,
+                                DataType = col.DataType
+                            }).ToList();
+                        }      
+
+                        var table = await _context.TableMetaDataEntity
+                            .FirstOrDefaultAsync(table => table.InfluxDbToken.ToLower() == influxDbToken.ToLower() &&
+                                             table.InfluxDbOrg.ToLower() == influxDbOrg.ToLower() &&
+                                             table.EntityName.ToLower() == tableName.ToLower() &&
+                                             table.InfluxDbBucket.ToLower() == influxDbBucket.ToLower());
+
+                        if (table == null)
+                        {
+                            return null;
+                        }
+
+                        tableDTO = new TableMetaDataDTO
+                        {
+                            Id = table.Id,
+                            EntityName = tableName,
+                            DatabaseName = databaseName,
+                            Provider = provider,
+                            InfluxDbOrg = influxDbOrg,
+                            InfluxDbToken = influxDbToken,
+                            InfluxDbUrl = influxDbUrl,
+                            InfluxDbBucket = influxDbBucket
+                        };
+
+                        return tableDTO;
+                    
+                }
+
                 else
                 {
                     var table = await _context.TableMetaDataEntity
@@ -185,7 +242,7 @@ namespace SchemaCraftHub.Service
                         return null;
                     }
 
-                     tableDTO = new TableMetaDataDTO
+                    tableDTO = new TableMetaDataDTO
                     {
                         Id = table.Id,
                         EntityName = table.EntityName,
@@ -375,7 +432,7 @@ namespace SchemaCraftHub.Service
             }
         }
 
-        public async Task<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1, DBConnectionDTO connectionDTO)
+        public async Task<Dictionary<string, List<ClientSchemaHub.Models.DTO.TableDetailsDTO>>> GetClientSchema(APIResponse tabledetails1,DBConnectionDTO connectionDTO)
         {
             try
             {
@@ -390,7 +447,7 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey,connectionDTO.Region, table.TableName);
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl, connectionDTO.InfluxDbBucket);
                                 if (table_exists == null)
                                 {
                                     var tablename = new TableMetaDataDTO
@@ -401,7 +458,11 @@ namespace SchemaCraftHub.Service
                                         Provider = connectionDTO.Provider,
                                         AccessKey = connectionDTO.AccessKey,
                                         Region = connectionDTO.Region,
-                                        SecretKey = connectionDTO.SecretKey
+                                        SecretKey = connectionDTO.SecretKey,
+                                        InfluxDbOrg = connectionDTO.InfluxDbOrg,
+                                        InfluxDbToken = connectionDTO.InfluxDbToken,
+                                        InfluxDbUrl = connectionDTO.InfluxDbUrl,
+                                        InfluxDbBucket = connectionDTO.InfluxDbBucket
                                     };
                                     await CreateTableAsync(tablename);
                                 }
@@ -412,7 +473,7 @@ namespace SchemaCraftHub.Service
                         {
                             foreach (var table in tabledetailsDTO.Value)
                             {
-                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName);
+                                var table_exists = await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl, connectionDTO.InfluxDbBucket);
 
                                 if (table_exists != null)
                                 {
@@ -428,11 +489,11 @@ namespace SchemaCraftHub.Service
 
                                         if (column_exists == null)
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName)).Id;
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl,connectionDTO.InfluxDbBucket)).Id;
                                             Nullable<int> ReferenceEntityID = null;
                                             if (columnDTO.HasForeignKey)
                                             {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase,  connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, columnDTO.ReferencedTable)).Id;
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, columnDTO.ReferencedTable, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl, connectionDTO.InfluxDbBucket)).Id;
                                             }
                                             var columnEntity = new ColumnDTO
                                             {
@@ -450,11 +511,11 @@ namespace SchemaCraftHub.Service
                                         }
                                         else
                                         {
-                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName)).Id;
+                                            var EntityId = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, table.TableName, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl, connectionDTO.InfluxDbBucket)).Id;
                                             Nullable<int> ReferenceEntityID = null;
                                             if (columnDTO.HasForeignKey)
                                             {
-                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, columnDTO.ReferencedTable)).Id;
+                                                ReferenceEntityID = (await GetTableByHostProviderDatabaseTableNameAsync(connectionDTO.HostName, connectionDTO.Provider, connectionDTO.DataBase, connectionDTO.AccessKey, connectionDTO.SecretKey, connectionDTO.Region, columnDTO.ReferencedTable, connectionDTO.InfluxDbToken, connectionDTO.InfluxDbOrg, connectionDTO.InfluxDbUrl, connectionDTO.InfluxDbBucket)).Id;
                                             }
                                             var columnEntity = new ColumnDTO
                                             {
@@ -508,7 +569,7 @@ namespace SchemaCraftHub.Service
         {
             try
             {
-                var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.EntityName, tableDTO.AccessKey, tableDTO.SecretKey, tableDTO.Region, tableDTO.DatabaseName);
+                var tableexists = await GetTableByHostProviderDatabaseTableNameAsync(tableDTO.HostName, tableDTO.Provider, tableDTO.EntityName, tableDTO.AccessKey, tableDTO.SecretKey, tableDTO.Region, tableDTO.DatabaseName, tableDTO.InfluxDbToken, tableDTO.InfluxDbOrg, tableDTO.InfluxDbUrl, tableDTO.InfluxDbBucket);
                 if (tableexists == null)
                 {
                     var table = new TableMetaDataEntity
@@ -517,9 +578,13 @@ namespace SchemaCraftHub.Service
                         HostName = tableDTO.HostName,
                         DatabaseName = tableDTO.DatabaseName,
                         Provider = tableDTO.Provider,
-                        AccessKey = tableDTO.AccessKey, 
+                        AccessKey = tableDTO.AccessKey,
                         Region = tableDTO.Region,
-                        SecretKey = tableDTO.SecretKey
+                        SecretKey = tableDTO.SecretKey,
+                        InfluxDbUrl = tableDTO.InfluxDbUrl,
+                        InfluxDbToken = tableDTO.InfluxDbToken,
+                        InfluxDbOrg = tableDTO.InfluxDbOrg,
+                        InfluxDbBucket = tableDTO.InfluxDbBucket
                         // Map other properties as needed
                     };
 
@@ -722,7 +787,7 @@ namespace SchemaCraftHub.Service
                         // Update other properties as needed
 
                         // Mark the entity as modified
-                         _context.ColumnMetaDataEntity.Update(existingColumnEntity);
+                        _context.ColumnMetaDataEntity.Update(existingColumnEntity);
                     }
                     else
                     {
@@ -748,11 +813,11 @@ namespace SchemaCraftHub.Service
                     Console.WriteLine("Fetching columns from DynamoDB table.");
 
                     var table = await _context.TableMetaDataEntity
-                       .FirstOrDefaultAsync(t => t.AccessKey.ToLower() == accessKey.ToLower() && 
-                       t.SecretKey.ToLower() == secretKey.ToLower() && 
-                       t.Region.ToLower() == region.ToLower() && 
-                       t.Provider.ToLower() == provider.ToLower() && 
-                       t.DatabaseName.ToLower() == databaseName.ToLower() && 
+                       .FirstOrDefaultAsync(t => t.AccessKey.ToLower() == accessKey.ToLower() &&
+                       t.SecretKey.ToLower() == secretKey.ToLower() &&
+                       t.Region.ToLower() == region.ToLower() &&
+                       t.Provider.ToLower() == provider.ToLower() &&
+                       t.DatabaseName.ToLower() == databaseName.ToLower() &&
                        t.EntityName.ToLower() == tableName.ToLower());
 
                     if (table == null)

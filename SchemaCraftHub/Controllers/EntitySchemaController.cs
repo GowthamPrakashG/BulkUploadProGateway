@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
@@ -112,11 +113,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/GetTableByHostProviderDatabaseTableName")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string? tableName)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string? tableName, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
-                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName,accessKey, secretkey, region, tableName);
+                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName,accessKey, secretkey, region, tableName, influxDbToken, influxDbOrg, influxDbUrl, influxDbBucket);
                 if (table == null)
                 {
                     return NotFound();
@@ -403,6 +404,27 @@ namespace SchemaCraftHub.Controllers
                        $"&SecretKey={Uri.EscapeDataString(connectionDTO.SecretKey)}" +
                        $"&Region={Uri.EscapeDataString(connectionDTO.Region)}";
             }
+
+            else if (connectionDTO.Provider.Contains("Influx", StringComparison.OrdinalIgnoreCase))
+            {
+                //string decodedUrl = Uri.UnescapeDataString(connectionDTO.InfluxDbUrl);
+
+                var uriBuilder = new UriBuilder("https://localhost:7246/EntityMigrate/GetTableDetails");
+                var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                query["Provider"] = connectionDTO.Provider;
+                query["InfluxDbUrl"] = connectionDTO.InfluxDbUrl;  // No need to encode this part
+                query["InfluxDbToken"] = connectionDTO.InfluxDbToken;  // No need to encode this part
+                query["InfluxDbOrg"] = connectionDTO.InfluxDbOrg;  // No need to encode this part
+                query["InfluxDbBucket"] = connectionDTO.InfluxDbBucket;  // No need to encode this part
+
+                uriBuilder.Query = query.ToString();
+                return uriBuilder.ToString();
+                
+            }
+
+
+
             else
             {
                 string encodedPassword = Uri.EscapeDataString(connectionDTO.Password);
