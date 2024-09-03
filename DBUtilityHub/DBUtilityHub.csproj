@@ -23,6 +23,14 @@
 	
 	  <PackageReference Include="InfluxDB.Client.Core" Version="4.17.0" />
 	
+	  <PackageReference Include="Cassandra.NET" Version="1.0.7" />
+	
+	  <PackageReference Include="CassandraCSharpDriver" Version="3.20.1" />
+	
+	  <PackageReference Include="CqlSharp" Version="0.41.1" />
+	
+	  <PackageReference Include="Dapper" Version="2.1.35" />
+	
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.19" />
 	
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.14">

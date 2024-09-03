@@ -18,6 +18,7 @@ builder.Services.AddScoped<IMSSQLService, MSSQLService>();
 builder.Services.AddScoped<IGeneralDatabaseService, GeneralDatabaseService>();
 builder.Services.AddScoped<IDynamoDbService, DynamoDbService>();
 builder.Services.AddScoped<IInfluxDbService, InfluxDbService>();
+builder.Services.AddScoped<IScyllaService, ScyllaService>();
 
 
 // Register configuration options
