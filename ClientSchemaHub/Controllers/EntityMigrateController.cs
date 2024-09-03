@@ -35,6 +35,8 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
                 connectionDto.Ec2Instance = HttpUtility.UrlDecode(connectionDto.Ec2Instance);
                 connectionDto.Keyspace = HttpUtility.UrlDecode(connectionDto.Keyspace);
+                connectionDto.IPAddress = HttpUtility.UrlDecode(connectionDto.IPAddress);
+                
 
                 
 

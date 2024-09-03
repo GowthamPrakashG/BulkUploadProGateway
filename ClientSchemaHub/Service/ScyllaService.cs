@@ -37,7 +37,7 @@ namespace ClientSchemaHub.Service
         {
             var cluster = Cluster.Builder()
                 .AddContactPoint(connectionDTO.IPAddress)
-                .WithPort(connectionDTO.PortNumber ?? 9042)
+                .WithPort(connectionDTO.PortNumber ?? 8000)
                 .Build();
             return cluster.Connect(connectionDTO.Keyspace);
         }
