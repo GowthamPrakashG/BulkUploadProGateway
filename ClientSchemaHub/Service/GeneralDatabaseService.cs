@@ -1,4 +1,5 @@
-﻿using ClientSchemaHub.Models.DTO;
+﻿using Azure.Core.Extensions;
+using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
 
 namespace ClientSchemaHub.Service
@@ -11,7 +12,8 @@ namespace ClientSchemaHub.Service
         private readonly ITimescaleService _timescaleService;
         private readonly IDynamoDbService _dynamoDbService;
         private readonly IInfluxDbService _influxDbService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IInfluxDbService influxDbService)
+        private readonly IScyllaService _scyllaService;
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IInfluxDbService influxDbService, IScyllaService scyllaService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
@@ -19,6 +21,7 @@ namespace ClientSchemaHub.Service
             _timescaleService = timescaleService;
             _dynamoDbService = dynamoDbService;
             _influxDbService = influxDbService;
+            _scyllaService = scyllaService;
 
             // Initialize other database services
         }
@@ -43,6 +46,8 @@ namespace ClientSchemaHub.Service
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Influx":
                         return await _influxDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Scylla":
+                        return await _scyllaService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -69,6 +74,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableNamesAsync(connectionDTO);
                     //case "Influx":
                     //    return await _influxDbService.GetTableNamesAsync(connectionDTO);
+                    case "Scylla":
+                        return await _scyllaService.GetTableNamesAsync(connectionDTO);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -94,6 +101,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "Influx":
                         return await _influxDbService.GetTableDetailsAsync(connectionDTO, tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -120,6 +129,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     case "Influx":
                         return await _influxDbService.GetPrimaryColumnDataAsync(connectionDTO, tableName);
                     default:
@@ -201,6 +212,8 @@ namespace ClientSchemaHub.Service
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
                     case "Influx":
                         return await _influxDbService.IsTableExists(dBConnection, tableName);
+                    case "Scylla":
+                        return await _scyllaService.IsTableExists(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -230,6 +243,8 @@ namespace ClientSchemaHub.Service
                         return await _dynamoDbService.GetTabledata(dBConnection,tableName);
                     case "Influx":
                         return await _influxDbService.GetTabledata(dBConnection, tableName);
+                    case "Scylla":
+                        return await _scyllaService.GetTableData(dBConnection, tableName);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }

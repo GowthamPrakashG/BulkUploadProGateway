@@ -34,25 +34,6 @@ namespace ClientSchemaHub.Service
                 tableDetailsDictionary[tableName].Add(tableDetails);
             }
 
-            // Example of hashing device communication data
-            DeviceCommunicationData deviceData = new DeviceCommunicationData
-            {
-                DeviceId = "Device123",
-                CommunicationData = "SampleData",
-                Timestamp = DateTime.UtcNow,
-                ProtocolHeader = "HeaderInfo",
-                AuthToken = "AuthToken123",
-                ConfigParameters = "ConfigParams",
-                Checksum = "ChecksumValue",
-                NetworkAddress = "192.168.1.1:8080",
-                SessionId = "Session123",
-                EncryptionKey = "EncryptionKey123"
-            };
-
-            string concatenatedData = $"{deviceData.DeviceId}:{deviceData.CommunicationData}:{deviceData.Timestamp}:{deviceData.ProtocolHeader}:{deviceData.AuthToken}:{deviceData.ConfigParameters}:{deviceData.Checksum}:{deviceData.NetworkAddress}:{deviceData.SessionId}:{deviceData.EncryptionKey}";
-            string hashedValue = DeviceCommunicationHasher.ComputeHash(concatenatedData);
-            Console.WriteLine($"Hashed Value: {hashedValue}");
-
             return tableDetailsDictionary;
         }
 

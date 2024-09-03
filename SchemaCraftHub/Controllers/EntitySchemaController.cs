@@ -83,11 +83,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/GetTablesByHostProviderDatabase")] //display list in frontend
-        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region)
+        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress)
         {
             try
             {
-                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName, accessKey, secretkey, region);
+                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName, accessKey, secretkey, region, keyspace, ec2Instance, ipAddress);
 
                 var responseModel = new APIResponse
                 {
@@ -113,11 +113,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/GetTableByHostProviderDatabaseTableName")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string? tableName, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress, string? tableName, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
-                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName,accessKey, secretkey, region, tableName, influxDbToken, influxDbOrg, influxDbUrl, influxDbBucket);
+                var table = await _entitySchemaService.GetTableByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, accessKey, secretkey, region, keyspace, ec2Instance, ipAddress, tableName, influxDbToken, influxDbOrg, influxDbUrl, influxDbBucket);
                 if (table == null)
                 {
                     return NotFound();
@@ -309,6 +309,7 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
+
         [HttpGet("cliententity")]
         public async Task<IActionResult> ClientEntity([FromQuery] DBConnectionDTO connectionDTO)
         {
@@ -321,6 +322,9 @@ namespace SchemaCraftHub.Controllers
                     httpClient.BaseAddress = new Uri(otherApiBaseUrl);
 
                     string requestUri = BuildRequestUri(connectionDTO);
+
+                    // Log the request URI for debugging
+                    Console.WriteLine($"Request URI: {requestUri}");
 
                     var response = await httpClient.GetAsync(requestUri);
 
@@ -395,6 +399,8 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
+
+
         private string BuildRequestUri(DBConnectionDTO connectionDTO)
         {
             if (connectionDTO.Provider.Contains("Dynamo", StringComparison.OrdinalIgnoreCase))
@@ -404,6 +410,17 @@ namespace SchemaCraftHub.Controllers
                        $"&SecretKey={Uri.EscapeDataString(connectionDTO.SecretKey)}" +
                        $"&Region={Uri.EscapeDataString(connectionDTO.Region)}";
             }
+
+            if (connectionDTO.Provider.Contains("Scylla", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"EntityMigrate/GetTableDetails?Provider={Uri.EscapeDataString(connectionDTO.Provider)}" +
+                       $"&IPAddress={Uri.EscapeDataString(connectionDTO.IPAddress)}" +
+                       $"&PortNumber=9042" +
+                       $"&Keyspace={Uri.EscapeDataString(connectionDTO.Keyspace)}" +
+                       $"&Ec2Instance={Uri.EscapeDataString(connectionDTO.Ec2Instance)}";
+            }
+
+
 
             else if (connectionDTO.Provider.Contains("Influx", StringComparison.OrdinalIgnoreCase))
             {

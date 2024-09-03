@@ -9,5 +9,9 @@
         public string ReferencedTable { get; set; }
         public string ReferencedColumn { get; set; }
         public bool IsNullable { get; set; }
+        public double? SomeNullableDouble { get; set; }
+
+        // Add this property if it's needed
+        public double? SomeNullableProperty { get; set; }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace DBUtilityHub.Models
 {
@@ -15,6 +14,10 @@ namespace DBUtilityHub.Models
         public string? AccessKey { get; set; }
         public string? SecretKey { get; set; }
         public string? Region { get; set; }
+        public string? IPAddress { get; set; }
+        public int? PortNumber { get; set; }
+        public string? Ec2Instance { get; set; }
+        public string? Keyspace { get; set; }
         public string? InfluxDbUrl { get; set; }
         public string? InfluxDbToken { get; set; }
         public string? InfluxDbOrg { get; set; }

@@ -34,20 +34,12 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
                 connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
                 connectionDto.InfluxDbUrl = HttpUtility.UrlDecode(connectionDto.InfluxDbUrl);
+                connectionDto.Ec2Instance = HttpUtility.UrlDecode(connectionDto.Ec2Instance);
+                connectionDto.Keyspace = HttpUtility.UrlDecode(connectionDto.Keyspace);
+                connectionDto.IPAddress = HttpUtility.UrlDecode(connectionDto.IPAddress);
+                
 
-                // Step 1: Inspect request data
-                // Log or debug the received connectionDto to inspect its content
-                // Example: System.Console.WriteLine("Received connectionDto: " + connectionDto);
-
-                // Step 2: Check for transformation
-                // Check if the HostName property of connectionDto contains any unexpected transformations
-                //if (connectionDto.HostName.Contains("\\\\"))
-                //{
-                //    // Handle transformation (if needed)
-                //    connectionDto.HostName = connectionDto.HostName.Replace("\\\\", "\\");
-                //}
-
-                // Now the connectionDto is ready to use without unintended transformations
+                
 
                 var tabledetails = await _generalDatabaseService.GetTableDetailsForAllTablesAsync(connectionDto);
 
