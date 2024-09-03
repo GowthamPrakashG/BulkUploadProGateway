@@ -1,7 +1,6 @@
 ﻿using Azure.Core.Extensions;
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service.IService;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace ClientSchemaHub.Service
 {
@@ -12,14 +11,16 @@ namespace ClientSchemaHub.Service
         private readonly IMSSQLService _msSQLService;
         private readonly ITimescaleService _timescaleService;
         private readonly IDynamoDbService _dynamoDbService;
+        private readonly IInfluxDbService _influxDbService;
         private readonly IScyllaService _scyllaService;
-        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IScyllaService scyllaService)
+        public GeneralDatabaseService(IPostgreSQLService postgreSQLService, IMySQLService mySQLService, IMSSQLService msSQLService, ITimescaleService timescaleService, IDynamoDbService dynamoDbService, IInfluxDbService influxDbService, IScyllaService scyllaService)
         {
             _postgreSQLService = postgreSQLService;
             _mySQLService = mySQLService;
             _msSQLService = msSQLService;
             _timescaleService = timescaleService;
             _dynamoDbService = dynamoDbService;
+            _influxDbService = influxDbService;
             _scyllaService = scyllaService;
 
             // Initialize other database services
@@ -43,6 +44,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Dynamo":
                         return await _dynamoDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
+                    case "Influx":
+                        return await _influxDbService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     case "Scylla":
                         return await _scyllaService.GetTableDetailsForAllTablesAsync(connectionDTO);
                     default:
@@ -69,6 +72,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableNamesAsync(connectionDTO);
                     case "Timescale":
                         return await _timescaleService.GetTableNamesAsync(connectionDTO);
+                    //case "Influx":
+                    //    return await _influxDbService.GetTableNamesAsync(connectionDTO);
                     case "Scylla":
                         return await _scyllaService.GetTableNamesAsync(connectionDTO);
                     default:
@@ -94,6 +99,8 @@ namespace ClientSchemaHub.Service
                         return await _msSQLService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "Timescale":
                         return await _timescaleService.GetTableDetailsAsync(connectionDTO, tableName);
+                    case "Influx":
+                        return await _influxDbService.GetTableDetailsAsync(connectionDTO, tableName);
                     case "Scylla":
                         return await _scyllaService.GetTableDetailsAsync(connectionDTO, tableName);
                     default:
@@ -201,6 +208,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.IsTableExists(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.IsTableExists(dBConnection, tableName);
+                    case "Influx":
+                        return await _influxDbService.IsTableExists(dBConnection, tableName);
                     case "Scylla":
                         return await _scyllaService.IsTableExists(dBConnection, tableName);
                     default:
@@ -230,6 +239,8 @@ namespace ClientSchemaHub.Service
                         return await _timescaleService.GetTabledata(dBConnection, tableName);
                     case "Dynamo":
                         return await _dynamoDbService.GetTabledata(dBConnection,tableName);
+                    case "Influx":
+                        return await _influxDbService.GetTabledata(dBConnection, tableName);
                     case "Scylla":
                         return await _scyllaService.GetTableData(dBConnection, tableName);
                     default:
@@ -272,23 +283,23 @@ namespace ClientSchemaHub.Service
         }
 
 
-        public async Task<List<dynamic>> PortCommunication(DBConnectionDTO dBConnection, string tableName)
+        public async Task<string> PortCommunication(DBConnectionDTO dBConnection)
         {
             try
             {
                 switch (dBConnection.Provider)
                 {
                     case "postgresql":
-                        return await _postgreSQLService.GetTabledata(dBConnection, tableName);
+                        return await _postgreSQLService.ReceiveHashFromPort(dBConnection);
                     //case "mysql": // Add the MySQL case
                     //   return await _postgreSQLService.GetTabledata(dBConnection, tableName);
                     // Add cases for other database providers
-                    case "MS SQL":
-                        return await _msSQLService.GetTabledata(dBConnection, tableName);
-                    case "Timescale":
-                        return await _timescaleService.GetTabledata(dBConnection, tableName);
-                    case "Dynamo":
-                        return await _dynamoDbService.GetTabledata(dBConnection, tableName);
+                    //case "MS SQL":
+                    //    return await _msSQLService.GetTabledata(dBConnection);
+                    //case "Timescale":
+                    //    return await _timescaleService.GetTabledata(dBConnection);
+                    //case "Dynamo":
+                    //    return await _dynamoDbService.GetTabledata(dBConnection);
                     default:
                         throw new ArgumentException("Unsupported database provider");
                 }
@@ -297,6 +308,7 @@ namespace ClientSchemaHub.Service
             {
                 throw new ArgumentException(ex.Message);
             }
+
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using Amazon.DynamoDBv2.Model;
+﻿using Amazon;
+using Amazon.DynamoDBv2.Model;
 using Amazon.DynamoDBv2;
 using DBUtilityHub.Data;
 using DBUtilityHub.Models;
@@ -6,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SchemaCraftHub.Model.DTO;
 using SchemaCraftHub.Service.IService;
-using System.Drawing;
 using System.Text;
 using APIResponse = SchemaCraftHub.Model.DTO.APIResponse;
 using ColumnDetailsDTO = ClientSchemaHub.Models.DTO.ColumnDetailsDTO;
-using Amazon;
 using Cassandra;
+
+
 
 namespace SchemaCraftHub.Service
 {
@@ -76,8 +77,8 @@ namespace SchemaCraftHub.Service
 
 
         public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(
-    string hostName, string provider, string databaseName,
-    string accessKey, string secretKey, string region,
+    string? hostName, string provider, string? databaseName,
+    string? accessKey, string? secretKey, string? region,
     string keyspace, string ec2Instance, string ipAddress)
         {
             try
@@ -168,11 +169,15 @@ namespace SchemaCraftHub.Service
 
 
 
+
+
+
+
         public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(
-    string hostName, string provider, string databaseName,
-    string accessKey, string secretKey, string region,
+    string? hostName, string provider, string? databaseName,
+    string? accessKey, string? secretKey, string? region,
     string keyspace, string ec2Instance, string ipAddress,
-    string tableName)
+    string? tableName)
         {
             try
             {
@@ -284,7 +289,6 @@ namespace SchemaCraftHub.Service
                         DatabaseName = table.DatabaseName,
                         Provider = table.Provider
                     };
-
                     return tableDTO;
                 }
             }
@@ -296,13 +300,6 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while fetching the table.", ex);
             }
         }
-
-
-
-
-
-
-
 
         public async Task<List<ColumnDTO>> GetAllColumnsAsync()
         {
@@ -497,6 +494,9 @@ namespace SchemaCraftHub.Service
                                         HostName = connectionDTO.HostName,
                                         DatabaseName = connectionDTO.DataBase,
                                         Provider = connectionDTO.Provider,
+                                        AccessKey = connectionDTO.AccessKey,
+                                        Region = connectionDTO.Region,
+                                        SecretKey = connectionDTO.SecretKey,
                                         Keyspace = connectionDTO.Keyspace,
                                         Ec2Instance = connectionDTO.Ec2Instance,
                                         IPAddress = connectionDTO.IPAddress
@@ -615,6 +615,9 @@ namespace SchemaCraftHub.Service
                         HostName = tableDTO.HostName,
                         DatabaseName = tableDTO.DatabaseName,
                         Provider = tableDTO.Provider,
+                        AccessKey = tableDTO.AccessKey, 
+                        Region = tableDTO.Region,
+                        SecretKey = tableDTO.SecretKey,
                         Keyspace = tableDTO.Keyspace,
                         IPAddress  = tableDTO.IPAddress,
                         Ec2Instance = tableDTO.Ec2Instance
@@ -835,7 +838,7 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while updating columns.", ex);
             }
         }
-        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region)
+        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string? secretKey, string? region)
         {
             try
             {

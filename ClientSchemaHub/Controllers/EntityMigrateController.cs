@@ -367,7 +367,7 @@ namespace ClientSchemaHub.Controllers
             }
         }
 
-        [HttpGet("PortCommunication")]
+        [HttpGet("Port-Communication")]
         public async Task<ActionResult<APIResponse>> PortCommunication([FromQuery] DBConnectionDTO dBConnection)
         {
             try

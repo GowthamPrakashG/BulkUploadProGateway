@@ -457,32 +457,29 @@ namespace ClientSchemaHub.Service
             return $"Host={connectionDTO.HostName};Database={connectionDTO.DataBase};Username={connectionDTO.UserName};Password={connectionDTO.Password}";
         }
 
-
         public async Task<string> ReceiveHashFromPort(DBConnectionDTO connectionDTO)
         {
-            DateTimeOffset dateTimeOffset = DateTimeOffset.Now;
-            string formatdatetimeoffset = dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz");
+            DateTime now = DateTime.Now;
+            string formatDateTime = now.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
 
-            //string timestampString = "2024-07-10 15:21:05.520756+0530";
+            //string timestampString = "2024-07-10 15:21:05.520756";
             string hashvalue = "78782622180614041f13cf01637f9f0898a0790914d2019428372700f91b0102000031cb9501382cba0d0a";
             int start = 8;
             int length = 16;
 
             string split = hashvalue.Remove(start, length);
-            
 
-
-            //DateTimeOffset timestamp = DateTimeOffset.ParseExact(
+            //DateTime timestamp = DateTime.ParseExact(
             //timestampString,
-            //"yyyy-MM-dd HH:mm:ss.ffffffzzz",
+            //"yyyy-MM-dd HH:mm:ss.ffffff",
             //CultureInfo.InvariantCulture);
 
-            DateTimeOffset timestamp = DateTimeOffset.ParseExact(
-            formatdatetimeoffset,
-            "yyyy-MM-dd HH:mm:ss.ffffffzzz",
+            DateTime timestamp = DateTime.ParseExact(
+            formatDateTime,
+            "yyyy-MM-dd HH:mm:ss.ffffff",
             CultureInfo.InvariantCulture);
 
-            long unixTimeMilliseconds = timestamp.ToUnixTimeMilliseconds();
+            long unixTimeMilliseconds = new DateTimeOffset(timestamp).ToUnixTimeMilliseconds();
             byte[] byteArray = BitConverter.GetBytes(unixTimeMilliseconds);
 
             if (BitConverter.IsLittleEndian)
@@ -494,7 +491,7 @@ namespace ClientSchemaHub.Service
 
             string finalhashvalue = split.Insert(8, hexValue);
 
-            Console.WriteLine($"Timestamp: {formatdatetimeoffset}");
+            Console.WriteLine($"Timestamp: {formatDateTime}");
             Console.WriteLine($"Unix Time (Milliseconds): {unixTimeMilliseconds}");
 
             Console.WriteLine($"Hash Value: {hashvalue}");
@@ -505,6 +502,8 @@ namespace ClientSchemaHub.Service
 
             return finalhashvalue;
         }
+
+
 
         public async Task<string> PortCommunication(DBConnectionDTO connectionDTO)
         {

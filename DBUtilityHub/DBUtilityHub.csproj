@@ -19,6 +19,10 @@
 	
 	  <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
 	
+	  <PackageReference Include="InfluxDB.Client" Version="4.17.0" />
+	
+	  <PackageReference Include="InfluxDB.Client.Core" Version="4.17.0" />
+	
 	  <PackageReference Include="Cassandra.NET" Version="1.0.7" />
 	
 	  <PackageReference Include="CassandraCSharpDriver" Version="3.20.1" />
@@ -34,7 +38,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	  <PackageReference Include="Npgsql" Version="7.0.4" />
+	  <PackageReference Include="Npgsql" Version="7.0.7" />
 	  
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
 	  

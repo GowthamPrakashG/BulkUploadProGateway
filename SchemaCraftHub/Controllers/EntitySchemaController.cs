@@ -81,8 +81,8 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        [HttpGet("tables/{hostName}/{provider}/{databaseName}")] //display list in frontend
-        public async Task<IActionResult> GetTablesByHostProviderDatabase(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region, string keyspace, string ec2Instance, string ipAddress)
+        [HttpGet("tables/GetTablesByHostProviderDatabase")] //display list in frontend
+        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress)
         {
             try
             {
@@ -111,8 +111,8 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        [HttpGet("tables/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string accessKey, string secretkey, string region, string keyspace, string ec2Instance, string ipAddress, string tableName)
+        [HttpGet("tables/GetTableByHostProviderDatabaseTableName")]
+        public async Task<IActionResult> GetTableByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress, string? tableName)
         {
             try
             {
@@ -462,8 +462,8 @@ namespace SchemaCraftHub.Controllers
             }
         }
 
-        [HttpGet("columns/{hostName}/{provider}/{databaseName}/{tableName}")]
-        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string hostName, string provider, string databaseName, string tableName, string accessKey, string secretKey, string region)
+        [HttpGet("columns/GetColumnsByHostProviderDatabaseTableName")]
+        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string ?secretKey, string? region)
         {
             try
             {

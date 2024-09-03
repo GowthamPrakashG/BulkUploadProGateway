@@ -1,10 +1,6 @@
 using ClientSchemaHub.Models.DTO;
 using ClientSchemaHub.Service;
 using ClientSchemaHub.Service.IService;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +17,7 @@ builder.Services.AddScoped<IMySQLService, MySQLService>();
 builder.Services.AddScoped<IMSSQLService, MSSQLService>();
 builder.Services.AddScoped<IGeneralDatabaseService, GeneralDatabaseService>();
 builder.Services.AddScoped<IDynamoDbService, DynamoDbService>();
+builder.Services.AddScoped<IInfluxDbService, InfluxDbService>();
 builder.Services.AddScoped<IScyllaService, ScyllaService>();
 
 

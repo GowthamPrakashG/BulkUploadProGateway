@@ -9,12 +9,14 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.304.4" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
+    <PackageReference Include="InfluxDB.Client" Version="4.17.0" />
+    <PackageReference Include="InfluxDB.Client.Core" Version="4.17.0" />
     <PackageReference Include="Cassandra.NET" Version="1.0.7" />
     <PackageReference Include="CassandraCSharpDriver" Version="3.20.1" />
     <PackageReference Include="CqlSharp" Version="0.41.1" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
-    <PackageReference Include="Npgsql" Version="7.0.4" />
+    <PackageReference Include="Npgsql" Version="7.0.7" />
 	  
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
