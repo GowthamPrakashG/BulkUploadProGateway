@@ -15,6 +15,11 @@ namespace SchemaCraftHub.Model.DTO
         public string? Ec2Instance { get; set; }
         public string? Keyspace { get; set; }
         public string? IPAddress { get; set; }
+        public string? InfluxDbOrg { get; set; }
+        public string? InfluxDbToken { get; set; }
+        public string? InfluxDbUrl { get; set; }
+        public string? InfluxDbBucket { get; set; }
+
     }
 
 }

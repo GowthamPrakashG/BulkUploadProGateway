@@ -33,6 +33,7 @@ namespace ClientSchemaHub.Controllers
                 connectionDto.UserName = HttpUtility.UrlDecode(connectionDto.UserName);
                 connectionDto.Password = HttpUtility.UrlDecode(connectionDto.Password);
                 connectionDto.Region = HttpUtility.UrlDecode(connectionDto.Region);
+                connectionDto.InfluxDbUrl = HttpUtility.UrlDecode(connectionDto.InfluxDbUrl);
                 connectionDto.Ec2Instance = HttpUtility.UrlDecode(connectionDto.Ec2Instance);
                 connectionDto.Keyspace = HttpUtility.UrlDecode(connectionDto.Keyspace);
                 connectionDto.IPAddress = HttpUtility.UrlDecode(connectionDto.IPAddress);

@@ -101,7 +101,7 @@ namespace ClientSchemaHub.Service
         {
             var influxDbClient = GetInfluxDbClient(dBConnection);
 
-            var tableDetails = new TableDetailsDTO { TableName = dBConnection.InfluxDbBucket };
+            var tableDetails = new TableDetailsDTO { TableName = tableName };
 
             try
             {
@@ -146,6 +146,42 @@ namespace ClientSchemaHub.Service
             var bucketsApi = influxDbClient.GetBucketsApi();
             var buckets = await bucketsApi.FindBucketsAsync();
             return buckets.Select(bucket => bucket.Name).ToList();
+        }
+
+
+        public async Task<List<object>> GetPrimaryColumnDataAsync(DBConnectionDTO dBConnection, string tableName)
+        {
+            try
+            {
+                var options = new InfluxDBClientOptions.Builder()
+                    .Url(dBConnection.InfluxDbUrl)
+                    .AuthenticateToken(dBConnection.InfluxDbToken.ToCharArray())
+                    .Org(dBConnection.InfluxDbOrg)
+                    .Build();
+
+                using (var influxDbClient = new InfluxDBClient(options))
+                {
+                    var queryApi = influxDbClient.GetQueryApi();
+
+                    string query = $@"
+                                   from(bucket: ""{dBConnection.InfluxDbBucket}"") |> range(start: 0) // Adjust the time range as needed |> filter(fn: (r) => r._measurement == ""{tableName}"") |> keep(columns: [""_field"", ""_value"", ""_time""]) |> group(columns: [""_field""]) |> sort(columns: [""_time""])";
+
+                    var fluxTables = await queryApi.QueryAsync(query);
+
+                    // Extract the first field's values as the "primary column" data
+                    var data = fluxTables
+                .SelectMany(table => table.Records)
+                .GroupBy(record => record.GetField())
+                .SelectMany(group => group.Select(record => record.GetValue()))
+                .ToList();
+
+                    return data;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"An error occurred while retrieving data: {ex.Message}");
+            }
         }
 
     }
