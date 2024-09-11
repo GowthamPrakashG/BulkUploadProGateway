@@ -90,52 +90,93 @@ namespace SchemaCraftHub.Service
 
                 if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching tables from DynamoDB.");
+                    //Console.WriteLine("Fetching tables from DynamoDB.");
 
-                    // Set up DynamoDB client
-                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
+                    //// Set up DynamoDB client
+                    //var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
 
-                    // Fetch tables from DynamoDB
-                    var request = new ListTablesRequest();
-                    var response = await client.ListTablesAsync(request);
+                    //// Fetch tables from DynamoDB
+                    //var request = new ListTablesRequest();
+                    //var response = await client.ListTablesAsync(request);
 
-                    foreach (var tableName in response.TableNames)
+                    //foreach (var tableName in response.TableNames)
+                    //{
+                    //    tableDTOs.Add(new TableMetaDataDTO
+                    //    {
+                    //        EntityName = tableName,
+                    //        DatabaseName = databaseName, // Use the provided database name dynamically
+                    //        Provider = provider
+                    //    });
+                    //}
+
+
+                    var tables = await _context.TableMetaDataEntity
+                        .Where(table => table.AccessKey.ToLower() == accessKey.ToLower() &&
+                                        table.SecretKey.ToLower() == secretKey.ToLower() &&
+                                        table.Region.ToLower() == region.ToLower())
+                        .ToListAsync();
+
+                    tableDTOs = tables.Select(table => new TableMetaDataDTO
                     {
-                        tableDTOs.Add(new TableMetaDataDTO
-                        {
-                            EntityName = tableName,
-                            DatabaseName = databaseName, // Use the provided database name dynamically
-                            Provider = provider
-                        });
-                    }
+                        Id = table.Id,
+                        EntityName = table.EntityName,
+                        AccessKey = table.AccessKey,
+                        SecretKey = table.SecretKey,
+                        Region = table.Region
+                        // Map other properties as needed
+                    }).ToList();
+
+
+
                 }
                 else if (provider.Equals("Scylla", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching tables from ScyllaDB.");
+                    //Console.WriteLine("Fetching tables from ScyllaDB.");
 
-                    // Set up ScyllaDB client using Cassandra driver
-                    var cluster = Cluster.Builder()
-                        .AddContactPoint(ipAddress) // Use the IP address
-                        .WithPort(9042)              // Use port 9042
-                        .Build();
+                    //// Set up ScyllaDB client using Cassandra driver
+                    //var cluster = Cluster.Builder()
+                    //    .AddContactPoint(ipAddress) // Use the IP address
+                    //    .WithPort(9042)              // Use port 9042
+                    //    .Build();
 
-                    using (var session = cluster.Connect(keyspace)) // Use the keyspace
+                    //using (var session = cluster.Connect(keyspace)) // Use the keyspace
+                    //{
+                    //    // Query system schema to find all table names in the keyspace
+                    //    var query = $"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace}'";
+                    //    var resultSet = session.Execute(query);
+
+                    //    foreach (var row in resultSet)
+                    //    {
+                    //        tableDTOs.Add(new TableMetaDataDTO
+                    //        {
+                    //            EntityName = row.GetValue<string>("table_name"),
+                    //            DatabaseName = keyspace,
+                    //            Provider = provider,
+                    //            HostName = hostName
+                    //        });
+                    //    }
+                    //}
+
+
+                    var tables = await _context.TableMetaDataEntity
+                        .Where(table => table.Ec2Instance.ToLower() == ec2Instance.ToLower() &&
+                                        table.IPAddress.ToLower() == ipAddress.ToLower() &&
+                                        table.Keyspace.ToLower() == keyspace.ToLower())
+                        .ToListAsync();
+
+                    tableDTOs = tables.Select(table => new TableMetaDataDTO
                     {
-                        // Query system schema to find all table names in the keyspace
-                        var query = $"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace}'";
-                        var resultSet = session.Execute(query);
+                        Id = table.Id,
+                        EntityName = table.EntityName,
+                        Ec2Instance = table.Ec2Instance,
+                        IPAddress = table.IPAddress,
+                        Keyspace = table.Keyspace
+                        // Map other properties as needed
+                    }).ToList();
 
-                        foreach (var row in resultSet)
-                        {
-                            tableDTOs.Add(new TableMetaDataDTO
-                            {
-                                EntityName = row.GetValue<string>("table_name"),
-                                DatabaseName = keyspace,
-                                Provider = provider,
-                                HostName = hostName
-                            });
-                        }
-                    }
+
+
+
                 }
                 else if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
                 {
@@ -149,9 +190,9 @@ namespace SchemaCraftHub.Service
                     {
                         Id = table.Id,
                         EntityName = table.EntityName,
-                        HostName = table.HostName,
-                        DatabaseName = table.DatabaseName,
-                        Provider = table.Provider
+                        InfluxDbBucket = table.InfluxDbBucket,
+                        InfluxDbToken = table.InfluxDbToken,
+                        InfluxDbOrg = table.InfluxDbOrg
                         // Map other properties as needed
                     }).ToList();
                 }
@@ -198,14 +239,14 @@ namespace SchemaCraftHub.Service
 
                 if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching tables from DynamoDB.");
+                    //Console.WriteLine("Fetching tables from DynamoDB.");
 
-                    // Set up DynamoDB client
-                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
+                    //// Set up DynamoDB client
+                    //var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
 
-                    // Fetch tables from DynamoDB
-                    var request = new ListTablesRequest();
-                    var response = await client.ListTablesAsync(request);
+                    //// Fetch tables from DynamoDB
+                    //var request = new ListTablesRequest();
+                    //var response = await client.ListTablesAsync(request);
 
                     var table = await _context.TableMetaDataEntity
                         .FirstOrDefaultAsync(t => t.AccessKey.ToLower() == accessKey.ToLower() &&
@@ -218,7 +259,8 @@ namespace SchemaCraftHub.Service
                     if (table == null)
                     {
                         return null;
-                    }                       
+                    }    
+                    
                             tableDTO = new TableMetaDataDTO
                             {
                                 Id = table.Id,
@@ -235,26 +277,27 @@ namespace SchemaCraftHub.Service
                 }
                 else if (provider.Equals("Scylla", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching tables from ScyllaDB.");
+                    //Console.WriteLine("Fetching tables from ScyllaDB.");
 
-                    var cluster = Cluster.Builder()
-                        .AddContactPoint(ipAddress) // This should be the IP address
-                        .WithPort(9042)              // Hardcode the port as it is always 9042
-                        .Build();
+                    //var cluster = Cluster.Builder()
+                    //    .AddContactPoint(ipAddress) // This should be the IP address
+                    //    .WithPort(9042)              // Hardcode the port as it is always 9042
+                    //    .Build();
 
-                    using (var session = cluster.Connect(keyspace)) // Keyspace is correct
-                    {
-                        var query = $"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace}' AND table_name = '{tableName}'";
-                        var resultSet = session.Execute(query);
-                        var row = resultSet.FirstOrDefault();
+                    //using (var session = cluster.Connect(keyspace)) // Keyspace is correct
+                    //{
+                    //    var query = $"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace}' AND table_name = '{tableName}'";
+                    //    var resultSet = session.Execute(query);
+                    //    var row = resultSet.FirstOrDefault();
 
-                        if (row != null)
-                        {
+                    //    if (row != null)
+                    //    {
                             var table = await _context.TableMetaDataEntity
                                 .FirstOrDefaultAsync(t => t.IPAddress.ToLower() == ipAddress.ToLower() &&
                                                           t.Keyspace.ToLower() == keyspace.ToLower() &&
                                                           t.Provider.ToLower() == provider.ToLower() &&
                                                           t.DatabaseName.ToLower() == databaseName.ToLower() &&
+                                                          t.Ec2Instance.ToLower() == ec2Instance.ToLower() &&
                                                           t.EntityName.ToLower() == tableName.ToLower());
 
                             if (table == null)
@@ -265,7 +308,8 @@ namespace SchemaCraftHub.Service
                             tableDTO = new TableMetaDataDTO
                             {
                                 Id = table.Id,
-                                EntityName = row.GetValue<string>("table_name"),
+                               // EntityName = row.GetValue<string>("table_name"),
+                               EntityName = tableName,
                                 DatabaseName = keyspace,
                                 Provider = provider,
                                 HostName = hostName,
@@ -275,38 +319,38 @@ namespace SchemaCraftHub.Service
                             };
 
                             return tableDTO;
-                        }
-                    }
+                        //}
+                    //}
 
-                    return null;
+                 //   return null;
                 }
 
                 if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching measurements from InfluxDB.");
+                    //Console.WriteLine("Fetching measurements from InfluxDB.");
 
-                    // Set up InfluxDB client
-                    var options = new InfluxDBClientOptions.Builder()
-                        .Url(influxDbUrl)
-                        .AuthenticateToken(influxDbToken.ToCharArray())
-                        .Org(influxDbOrg)
-                        .Build();
+                    //// Set up InfluxDB client
+                    //var options = new InfluxDBClientOptions.Builder()
+                    //    .Url(influxDbUrl)
+                    //    .AuthenticateToken(influxDbToken.ToCharArray())
+                    //    .Org(influxDbOrg)
+                    //    .Build();
 
-                    var influxDbClient = new InfluxDBClient(options);
-                    var tableDetails = new TableDetailsDTO { TableName = tableName };        
+                    //var influxDbClient = new InfluxDBClient(options);
+                    //var tableDetails = new TableDetailsDTO { TableName = tableName };        
                     
-                        var query = $"from(bucket: \"{influxDbBucket}\") |> range(start: -1h) |> limit(n:1)";
-                        var fluxTables = await influxDbClient.GetQueryApi().QueryAsync(query,influxDbOrg);
+                    //    var query = $"from(bucket: \"{influxDbBucket}\") |> range(start: -1h) |> limit(n:1)";
+                    //    var fluxTables = await influxDbClient.GetQueryApi().QueryAsync(query,influxDbOrg);
 
-                        if (fluxTables.Count > 0)
-                        {
-                            var fluxTable = fluxTables[0];
-                            tableDetails.Columns = fluxTable.Columns.Select(col => new ColumnDetailsDTO
-                            {
-                                ColumnName = col.Label,
-                                DataType = col.DataType
-                            }).ToList();
-                        }      
+                    //    if (fluxTables.Count > 0)
+                    //    {
+                    //        var fluxTable = fluxTables[0];
+                    //        tableDetails.Columns = fluxTable.Columns.Select(col => new ColumnDetailsDTO
+                    //        {
+                    //            ColumnName = col.Label,
+                    //            DataType = col.DataType
+                    //        }).ToList();
+                    //    }      
 
                         var table = await _context.TableMetaDataEntity
                             .FirstOrDefaultAsync(table => table.InfluxDbToken.ToLower() == influxDbToken.ToLower() &&
@@ -921,49 +965,89 @@ namespace SchemaCraftHub.Service
 
                 if (provider.Equals("Dynamo", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Fetching columns from DynamoDB table.");
-                    // Set up DynamoDB client
-                    var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
-                    // Describe the DynamoDB table
-                    var describeTableRequest = new DescribeTableRequest
-                    {
-                        TableName = tableName
-                    };
+                    //Console.WriteLine("Fetching columns from DynamoDB table.");
+                    //// Set up DynamoDB client
+                    //var client = new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.GetBySystemName(region));
+                    //// Describe the DynamoDB table
+                    //var describeTableRequest = new DescribeTableRequest
+                    //{
+                    //    TableName = tableName
+                    //};
 
-                    var describeTableResponse = await client.DescribeTableAsync(describeTableRequest);
-                    // Extract attribute definitions (columns) from the table description
-                    var attributeDefinitions = describeTableResponse.Table.AttributeDefinitions;
-                    var keySchema = describeTableResponse.Table.KeySchema;
-                    foreach (var attribute in attributeDefinitions)
-                    {
-                        bool isPrimaryKey = keySchema.Any(k => k.AttributeName == attribute.AttributeName);
-                        var columnDTO = new ColumnDTO
-                        {
-                            Id = 0, // Default to 0, should be set appropriately based on your requirements
-                            ColumnName = attribute.AttributeName,
-                            Datatype = attribute.AttributeType.ToString(),
-                            IsPrimaryKey = isPrimaryKey,
-                            IsForeignKey = false,
-                            EntityId = 0,
-                            ReferenceEntityID = null,
-                            ReferenceColumnID = null,
-                            Length = null,
-                            MinLength = null,
-                            MaxLength = null,
-                            MaxRange = null,
-                            MinRange = null,
-                            DateMinValue = null,
-                            DateMaxValue = null,
-                            Description = $"Attribute of {tableName}",
-                            IsNullable = true,
-                            DefaultValue = null,
-                            True = null,
-                            False = null
-                        };
+                    //var describeTableResponse = await client.DescribeTableAsync(describeTableRequest);
+                    //// Extract attribute definitions (columns) from the table description
+                    //var attributeDefinitions = describeTableResponse.Table.AttributeDefinitions;
+                    //var keySchema = describeTableResponse.Table.KeySchema;
+                    //foreach (var attribute in attributeDefinitions)
+                    //{
+                    //    bool isPrimaryKey = keySchema.Any(k => k.AttributeName == attribute.AttributeName);
+                    //    var columnDTO = new ColumnDTO
+                    //    {
+                    //        Id = 0, // Default to 0, should be set appropriately based on your requirements
+                    //        ColumnName = attribute.AttributeName,
+                    //        Datatype = attribute.AttributeType.ToString(),
+                    //        IsPrimaryKey = isPrimaryKey,
+                    //        IsForeignKey = false,
+                    //        EntityId = 0,
+                    //        ReferenceEntityID = null,
+                    //        ReferenceColumnID = null,
+                    //        Length = null,
+                    //        MinLength = null,
+                    //        MaxLength = null,
+                    //        MaxRange = null,
+                    //        MinRange = null,
+                    //        DateMinValue = null,
+                    //        DateMaxValue = null,
+                    //        Description = $"Attribute of {tableName}",
+                    //        IsNullable = true,
+                    //        DefaultValue = null,
+                    //        True = null,
+                    //        False = null
+                    //    };
 
-                        columns.Add(columnDTO);
+                    //    columns.Add(columnDTO);
+                    //}
+                    //return columns;
+
+
+                    var table = await _context.TableMetaDataEntity
+                      .FirstOrDefaultAsync(t => t.AccessKey.ToLower() == accessKey.ToLower() && t.SecretKey.ToLower() == secretKey.ToLower() && t.Region.ToLower() == region.ToLower() && t.EntityName.ToLower() == tableName.ToLower());
+
+                    if (table == null)
+                    {
+                        return null;
                     }
-                    return columns;
+
+                    var column = await _context.ColumnMetaDataEntity
+                            .Where(column => column.EntityId == table.Id)
+                            .ToListAsync();
+                    var columnDTOs = column.Select(column => new Model.DTO.ColumnDTO
+                    {
+                        Id = column.Id,
+                        ColumnName = column.ColumnName,
+                        Datatype = column.Datatype,
+                        IsPrimaryKey = column.IsPrimaryKey,
+                        IsForeignKey = column.IsForeignKey,
+                        EntityId = column.EntityId,
+                        ReferenceEntityID = column.ReferenceEntityID,
+                        ReferenceColumnID = column.ReferenceColumnID,
+                        Length = column.Length,
+                        MinLength = column.MinLength,
+                        MaxLength = column.MaxLength,
+                        MaxRange = column.MaxRange,
+                        MinRange = column.MinRange,
+                        DateMinValue = column.DateMinValue,
+                        DateMaxValue = column.DateMaxValue,
+                        Description = column.Description,
+                        IsNullable = column.IsNullable,
+                        DefaultValue = column.DefaultValue,
+                        True = column.True,
+                        False = column.False,
+                        // Include other properties as needed
+                    }).ToList();
+
+                    return columnDTOs;
+
                 }
 
                 if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
