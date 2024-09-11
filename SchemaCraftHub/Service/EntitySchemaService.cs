@@ -39,7 +39,8 @@ namespace SchemaCraftHub.Service
                     EntityName = table.EntityName,
                     HostName = table.HostName,
                     DatabaseName = table.DatabaseName,
-                    Provider = table.Provider
+                    Provider = table.Provider,
+                    Ec2Instance = table.Ec2Instance
                     // Map other properties as needed
                 }).ToList();
 
@@ -81,7 +82,7 @@ namespace SchemaCraftHub.Service
         public async Task<List<TableMetaDataDTO>> GetTablesByHostProviderDatabaseAsync(
     string? hostName, string provider, string? databaseName,
     string? accessKey, string? secretKey, string? region,
-    string keyspace, string ec2Instance, string ipAddress)
+    string keyspace, string ec2Instance, string ipAddress, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
@@ -136,6 +137,24 @@ namespace SchemaCraftHub.Service
                         }
                     }
                 }
+                else if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
+                {
+                    var tables = await _context.TableMetaDataEntity
+                        .Where(table => table.InfluxDbBucket.ToLower() == influxDbBucket.ToLower() &&
+                                        table.InfluxDbOrg.ToLower() == influxDbOrg.ToLower() &&
+                                        table.InfluxDbToken.ToLower() == influxDbToken.ToLower())
+                        .ToListAsync();
+
+                    tableDTOs = tables.Select(table => new TableMetaDataDTO
+                    {
+                        Id = table.Id,
+                        EntityName = table.EntityName,
+                        HostName = table.HostName,
+                        DatabaseName = table.DatabaseName,
+                        Provider = table.Provider
+                        // Map other properties as needed
+                    }).ToList();
+                }
                 else
                 {
                     var tables = await _context.TableMetaDataEntity
@@ -165,14 +184,6 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while fetching tables.", ex);
             }
         }
-
-
-
-
-
-
-
-
 
 
         public async Task<TableMetaDataDTO> GetTableByHostProviderDatabaseTableNameAsync(
@@ -902,7 +913,7 @@ namespace SchemaCraftHub.Service
                 throw new ApplicationException("An error occurred while updating columns.", ex);
             }
         }
-        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string? secretKey, string? region)
+        public async Task<List<ColumnDTO>> GetColumnsByHostProviderDatabaseTableNameAsync(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string? secretKey, string? region, string keyspace, string ec2Instance, string ipAddress, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
@@ -955,8 +966,90 @@ namespace SchemaCraftHub.Service
                     return columns;
                 }
 
-                else
+                if (provider.Equals("Influx", StringComparison.OrdinalIgnoreCase))
                 {
+                    var table = await _context.TableMetaDataEntity
+                       .FirstOrDefaultAsync(t => t.InfluxDbBucket.ToLower() == influxDbBucket.ToLower() && t.InfluxDbToken.ToLower() == influxDbToken.ToLower() && t.InfluxDbOrg.ToLower() == influxDbOrg.ToLower() && t.EntityName.ToLower() == tableName.ToLower() && t.InfluxDbUrl.ToLower() == influxDbUrl.ToLower());
+
+                    if (table == null)
+                    {
+                        return null;
+                    }
+
+                    var column = await _context.ColumnMetaDataEntity
+                            .Where(column => column.EntityId == table.Id)
+                            .ToListAsync();
+                    var columnDTOs = column.Select(column => new Model.DTO.ColumnDTO
+                    {
+                        Id = column.Id,
+                        ColumnName = column.ColumnName,
+                        Datatype = column.Datatype,
+                        IsPrimaryKey = column.IsPrimaryKey,
+                        IsForeignKey = column.IsForeignKey,
+                        EntityId = column.EntityId,
+                        ReferenceEntityID = column.ReferenceEntityID,
+                        ReferenceColumnID = column.ReferenceColumnID,
+                        Length = column.Length,
+                        MinLength = column.MinLength,
+                        MaxLength = column.MaxLength,
+                        MaxRange = column.MaxRange,
+                        MinRange = column.MinRange,
+                        DateMinValue = column.DateMinValue,
+                        DateMaxValue = column.DateMaxValue,
+                        Description = column.Description,
+                        IsNullable = column.IsNullable,
+                        DefaultValue = column.DefaultValue,
+                        True = column.True,
+                        False = column.False,
+                        // Include other properties as needed
+                    }).ToList();
+
+                    return columnDTOs;
+                }
+
+                if (provider.Equals("Scylla", StringComparison.OrdinalIgnoreCase))
+                {
+                    var table = await _context.TableMetaDataEntity
+                       .FirstOrDefaultAsync(t => t.IPAddress.ToLower() == ipAddress.ToLower() && t.Keyspace.ToLower() == keyspace.ToLower() && t.Ec2Instance.ToLower() == ec2Instance.ToLower() && t.EntityName.ToLower() == tableName.ToLower());
+
+                    if (table == null)
+                    {
+                        return null;
+                    }
+
+                    var column = await _context.ColumnMetaDataEntity
+                            .Where(column => column.EntityId == table.Id)
+                            .ToListAsync();
+                    var columnDTOs = column.Select(column => new Model.DTO.ColumnDTO
+                    {
+                        Id = column.Id,
+                        ColumnName = column.ColumnName,
+                        Datatype = column.Datatype,
+                        IsPrimaryKey = column.IsPrimaryKey,
+                        IsForeignKey = column.IsForeignKey,
+                        EntityId = column.EntityId,
+                        ReferenceEntityID = column.ReferenceEntityID,
+                        ReferenceColumnID = column.ReferenceColumnID,
+                        Length = column.Length,
+                        MinLength = column.MinLength,
+                        MaxLength = column.MaxLength,
+                        MaxRange = column.MaxRange,
+                        MinRange = column.MinRange,
+                        DateMinValue = column.DateMinValue,
+                        DateMaxValue = column.DateMaxValue,
+                        Description = column.Description,
+                        IsNullable = column.IsNullable,
+                        DefaultValue = column.DefaultValue,
+                        True = column.True,
+                        False = column.False,
+                        // Include other properties as needed
+                    }).ToList();
+
+                    return columnDTOs;
+                }
+
+                else
+                    {
                     var table = await _context.TableMetaDataEntity
                        .FirstOrDefaultAsync(t => t.HostName.ToLower() == hostName.ToLower() && t.Provider.ToLower() == provider.ToLower() && t.DatabaseName.ToLower() == databaseName.ToLower() && t.EntityName.ToLower() == tableName.ToLower());
 

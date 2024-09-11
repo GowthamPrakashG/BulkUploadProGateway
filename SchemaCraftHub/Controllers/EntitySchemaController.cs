@@ -83,11 +83,11 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("tables/GetTablesByHostProviderDatabase")] //display list in frontend
-        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress)
+        public async Task<IActionResult> GetTablesByHostProviderDatabase(string? hostName, string provider, string? databaseName, string? accessKey, string? secretkey, string? region, string keyspace, string ec2Instance, string ipAddress, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
-                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName, accessKey, secretkey, region, keyspace, ec2Instance, ipAddress);
+                var tables = await _entitySchemaService.GetTablesByHostProviderDatabaseAsync(hostName, provider, databaseName, accessKey, secretkey, region, keyspace, ec2Instance, ipAddress, influxDbOrg, influxDbUrl, influxDbBucket,influxDbToken);
 
                 var responseModel = new APIResponse
                 {
@@ -485,12 +485,12 @@ namespace SchemaCraftHub.Controllers
         }
 
         [HttpGet("columns/GetColumnsByHostProviderDatabaseTableName")]
-        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string ?secretKey, string? region)
+        public async Task<IActionResult> GetColumnsByHostProviderDatabaseTableName(string? hostName, string provider, string? databaseName, string? tableName, string? accessKey, string ?secretKey, string? region, string keyspace, string ec2Instance, string ipAddress, string? influxDbToken, string? influxDbOrg, string? influxDbUrl, string? influxDbBucket)
         {
             try
             {
 
-                var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName, accessKey, secretKey, region);
+                var table = await _entitySchemaService.GetColumnsByHostProviderDatabaseTableNameAsync(hostName, provider, databaseName, tableName, accessKey, secretKey, region, keyspace, ec2Instance, ipAddress, influxDbBucket, influxDbOrg,influxDbToken,influxDbUrl);
                 if (table == null)
                 {
                     return NotFound();
